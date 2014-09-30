@@ -2,6 +2,7 @@
 #include "SDL.h"
 #include "SDL_image.h"
 #include "graphics.h"
+#include "glib.h"
 
 extern SDL_Surface* screen;
 extern SDL_Surface* buffer; //pointer to the draw buffer

@@ -70,6 +70,10 @@ typedef struct	//this didn't need to be its own type, its only used once
 	int xres, yres, depth;
 } ScreenData;
 
+int getImagePathFromFile(char *filepath,char * filename);
+void addCoordinateToFile(char *filepath,int x, int y);
+int getCoordinatesFromFile(int *x, int *y,char * filename);
+
 void Init_Graphics();
 void DrawPixel(SDL_Surface* screen, Uint8 R, Uint8 G, Uint8 B, int x, int y);
 void BlankScreen(SDL_Surface* buf, Uint32 color);

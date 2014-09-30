@@ -26,6 +26,95 @@ Uint32 NOW;					//the current time since program started
 Uint32 rmask,gmask,bmask,amask;
 ScreenData  S_Data;
 
+int getImagePathFromFile(char *filepath,char * filename)
+{
+    FILE *fileptr = NULL;
+    char buf[255];
+    int returnValue = -1;
+    if (!filepath)
+    {
+        fprintf(stdout,"getImagePathFromFile: warning, no output parameter provided\n");
+        return -1;
+    }
+    if (!filename)
+    {
+        fprintf(stdout,"getImagePathFromFile: warning, no input file path provided\n");
+        return -1;
+    }
+    fileptr = fopen(filename,"r");
+    if (!fileptr)
+    {
+        fprintf(stderr,"unable to open file: %s\n",filename);
+        return -1;
+    }
+    if (fscanf(fileptr,"%s",buf))
+    {
+        if (strcmp(buf,"image:")==0)
+        {
+            fscanf(fileptr,"%s",filepath);
+            returnValue = 0;
+        }
+    }
+    fclose(fileptr);
+    return returnValue;
+}
+
+void addCoordinateToFile(char *filepath,int x, int y)
+{
+    FILE *fileptr = NULL;
+    if (!filepath)
+    {
+        fprintf(stdout,"addCoordinateToFile: warning, no input file path provided\n");
+        return;
+    }
+    fileptr = fopen(filepath,"a");
+    if (!fileptr)
+    {
+        fprintf(stderr,"unable to open file: %s\n",filepath);
+        return;
+    }
+    fprintf(fileptr,"newcoordinate: %i %i\n",x,y);
+    fclose(fileptr);
+}
+
+int getCoordinatesFromFile(int *x, int *y,char * filename)
+{
+    FILE *fileptr = NULL;
+    char buf[255];
+    int tx,ty;
+    int returnValue = -1;
+    if ((!x)&&(!y))
+    {
+        fprintf(stdout,"getCoordinatesFromFile: warning, no output parameter provided\n");
+        return -1;
+    }
+    if (!filename)
+    {
+        fprintf(stdout,"getCoordinatesFromFile: warning, no input file path provided\n");
+        return -1;
+    }
+    fileptr = fopen(filename,"r");
+    if (!fileptr)
+    {
+        fprintf(stderr,"unable to open file: %s\n",filename);
+        return -1;
+    }
+    while (fscanf(fileptr,"%s",buf) != EOF)
+    {
+        fprintf(stdout,"buf is: %s\n",buf);
+        if (strcmp(buf,"position:")==0)
+        {
+            fscanf(fileptr,"%i %i",&tx,&ty);
+            fprintf(stdout,"as read: %i, %i\n",tx,ty);
+            returnValue = 0;
+        }
+    }
+    fclose(fileptr);
+    if (x)*x = tx;
+    if (y)*y = ty;
+    return returnValue;
+}
+
 
 void Init_Graphics()
 {
@@ -277,7 +366,7 @@ Sprite* LoadSwappedSprite(char* filename, int sizex, int sizey, int c1, int c2, 
  * so we can get them again later.
  */
 
-void FreeSprite(Sprite* sprite)
+void FreeSprite(Sprite* sprite) //TODO: use pointer to pointer to unassign pointer reference
 {
 	//first lets check to see if the sprite is still being used.
 	sprite->used--;
@@ -460,11 +549,12 @@ void putpixel(SDL_Surface* surface, int x, int y, Uint32 pixel)
 
 void FrameDelay(Uint32 delay)
 {
-    static Uint32 pass = 100;
+    static Uint32 prev = 100; //only 100 for first call. dif will be -100 + #ticks from SDL, therefore there will be a -100 + #ticks delay
+
     Uint32 dif;
-    dif = SDL_GetTicks() - pass;
+    dif = SDL_GetTicks() - prev;
     if(dif < delay)SDL_Delay( delay - dif);
-    pass = SDL_GetTicks();
+    prev = SDL_GetTicks();
 }
 
 /**
