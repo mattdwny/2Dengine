@@ -1,82 +1,95 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-	#include <stdlib.h>
-	#include <stdio.h>
-	#include <string.h>
-	#include "SDL.h"
-	#include "SDL_image.h"
-	#include "graphics.h"
-	#include "glib.h"
-	#include "vector2.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include "SDL.h"
+#include "SDL_image.h"
+#include "graphics.h"
+#include "glib.h"
+#include "vector2.h"
 
-	struct Entity
-	{
-		int used; //is this object an available resource? (Note: if it is NONE should be set)
-		int visible;
+typedef enum { NONE, PLAYER, PROJECTILE, WALL } Selection;
 
-		typedef enum Type { NONE, PLAYER, PROJECTILE, WALL };
-		Type type; //NOTE: neccessary to check against NONE (keep separate)
+typedef struct 
+{
+	Sprite* sprite;
+	int frame;
+	vec2d pos;
+	vec2d vel;
+	SDL_Rect BBox;
+	float radius;
+} Fighter;
 
-		/* Function Pointers */
+typedef struct 
+{
+	Sprite* sprite;
+	int frame;
+	vec2d pos;
+	vec2d vel;
+	SDL_Rect BBox;
+	float radius;
+} Projectile;
 
-		void (*think) (Entity* self);
-		void (*update) (Entity* self);
-		void (*draw) (Entity* self);
+typedef struct 
+{
+	Sprite* sprite;
+	int frame;
+	vec2d pos;
+	vec2d vel;
+	SDL_Rect BBox;
+	float radius;
+} HealthBar;
 
-		typedef struct Player
-		{
-			Sprite* sprite;
-			int frame;
-			vector2 pos;
-			vector2 vel;
-			SDL_Rect BBox;
-			float radius;
-		};
+typedef struct 
+{
+	Sprite* sprite;
+	float health;
+	SDL_Rect BBox;
+} Controller;
 
-		typedef struct Projectile
-		{
-			Sprite* sprite;
-			int frame;
-			vector2 pos;
-			vector2 vel;
-			SDL_Rect BBox;
-			float radius;
-		};
+typedef struct 
+{
+	Sprite* sprite;
+	int frame;
+	vec2d pos;
+	vec2d vel;
+	SDL_Rect BBox;
+	float radius;
+} Wall;
 
-		typedef struct Wall
-		{
-			Sprite* sprite;
-			int frame;
-			vector2 pos;
-			vector2 vel;
-			SDL_Rect BBox;
-			float radius;
-		};
+typedef union Data_S
+{	
+	// Possible states when it's in use.	
+	Fighter fighter;
+	Projectile projectile;
+	HealthBar healthBar;
+	Controller controller;
+} Data;
 
-		union Data
-		{
-			// State when it's available.
-			Entity* next;
-			
-			// Possible states when it's in use.	
-			Player player;
-			Projectile projectile;
-			Wall wall;
-		} data;
-	};
+typedef struct Entity_S
+{
+	int used; //should this object be updated?
+	int visible; //should we render the object?
 
-	int __MaxEntities = 512;
-	Entity* __entityList;
-	Entity* __firstFree;
+	/* Function Pointers */
 
-	void CloseEntityList();
-	void DrawEntity(Entity *ent);
-	void DrawEntityList();
-	void FreeEntity(Entity** ent);
-	Entity* GetEntity();
-	void InitEntityList();
-	void ThinkEntityList();
-	void UpdateEntityList();
+	void (*think) (struct Entity_S* self);
+	void (*update) (struct Entity_S* self);
+	void (*draw) (struct Entity_S* self);
+
+    struct Entity_S* next;
+	Data data;
+} Entity;
+
+void CloseEntityList();
+void DrawEntity(Entity *ent);
+void DrawEntityList();
+void FreeEntity(Entity** ent);
+Entity* GetEntity();
+void InitEntityList();
+void ThinkEntityList();
+void UpdateEntityList();
 
 #endif

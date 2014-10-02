@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 
 	Init_All();
 
-	temp = IMG_Load("images/bgtest.png");  // notice that the path is part of the filename
+	temp = IMG_Load("images/bgtest.png"); // notice that the path is part of the filename
 	if(temp != NULL) bg = SDL_DisplayFormat(temp); // ALWAYS check your pointers before you use them
 
 	SDL_FreeSurface(temp);
