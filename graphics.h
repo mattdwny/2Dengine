@@ -1,5 +1,5 @@
-#ifndef _GRAPHICS_
-#define _GRAPHICS_
+#ifndef GRAPHICS_H
+#define GRAPHICS_H
 
 /**
  *	graphics.h
@@ -74,7 +74,7 @@ int getImagePathFromFile(char *filepath,char * filename);
 void addCoordinateToFile(char *filepath,int x, int y);
 int getCoordinatesFromFile(int *x, int *y,char * filename);
 
-void Init_Graphics();
+void InitGraphics();
 void DrawPixel(SDL_Surface* screen, Uint8 R, Uint8 G, Uint8 B, int x, int y);
 void BlankScreen(SDL_Surface* buf, Uint32 color);
 void SwapSprite(SDL_Surface* sprite, int color1, int color2, int color3);

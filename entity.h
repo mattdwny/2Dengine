@@ -9,30 +9,12 @@
 #include "graphics.h"
 #include "glib.h"
 #include "vector2.h"
+#include "fighter.h"
+#include "projectile.h"
 
-typedef enum { NONE, PLAYER, PROJECTILE, WALL } Selection;
+typedef enum { NONE = 0, FIGHTER = 1, PROJECTILE = 2, WALL = 3 } EntityType;
 
-typedef struct 
-{
-	Sprite* sprite;
-	int frame;
-	vec2d pos;
-	vec2d vel;
-	SDL_Rect BBox;
-	float radius;
-} Fighter;
-
-typedef struct 
-{
-	Sprite* sprite;
-	int frame;
-	vec2d pos;
-	vec2d vel;
-	SDL_Rect BBox;
-	float radius;
-} Projectile;
-
-typedef struct 
+typedef struct HealthBar_S
 {
 	Sprite* sprite;
 	int frame;
@@ -42,7 +24,7 @@ typedef struct
 	float radius;
 } HealthBar;
 
-typedef struct 
+typedef struct Controller_S
 {
 	Sprite* sprite;
 	float health;
@@ -73,21 +55,17 @@ typedef struct Entity_S
 	int used; //should this object be updated?
 	int visible; //should we render the object?
 
-	/* Function Pointers */
-
-	void (*think) (struct Entity_S* self);
-	void (*update) (struct Entity_S* self);
-	void (*draw) (struct Entity_S* self);
+	EntityType entType;
 
     struct Entity_S* next;
 	Data data;
 } Entity;
 
 void CloseEntityList();
-void DrawEntity(Entity *ent);
 void DrawEntityList();
 void FreeEntity(Entity** ent);
-Entity* GetEntity();
+Fighter* GetFighter(int player, int fighterId, int color);
+Projectile* GetProjectile(int player);
 void InitEntityList();
 void ThinkEntityList();
 void UpdateEntityList();

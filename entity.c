@@ -1,9 +1,16 @@
 #include "entity.h"
 
 #define __maxEntities 512
+#define __entityPermutation 2
 
 Entity* __entityList = NULL;
 Entity* __firstFree = NULL;
+
+void (*draw    [__entityPermutation])(void* data); //an array of function pointers to draw functions that take void pointers to the data union type
+void (*destroy [__entityPermutation])(void* data);
+void (*init    [__entityPermutation])(void* data);
+void (*think   [__entityPermutation])(void* data);
+void (*update  [__entityPermutation])(void* data);
 
 void CloseEntityList()
 {
@@ -22,25 +29,35 @@ void DrawEntityList()
 	{
 		if(__entityList[i].used)
 		{
-			if(__entityList[i].visible) __entityList[i].draw(&__entityList[i]);
+			void (*func)(void* data) = draw[__entityList[i].entType];
+			if(func) func(&__entityList[i].data);
 		}
 	}
 }
 
 void FreeEntity(Entity** ent)
 {
-	//handle freeing resources like Sprite Data
-	memset(*ent,0,sizeof(Entity));
-	*ent = NULL;
+	void (*func)(void* data) = destroy[(*ent)->entType];
+	if(func) func(&(*ent)->data);
+
+	(*ent)->entType = NONE; //ashes to ashes, NONE to NONE
+
+	(*ent)->next = __firstFree; //make sure to add the entity back into the object pool
+	__firstFree = *ent;
 }
 
-Entity* GetEntity()
+void* GetEntity(EntityType entType)
 {
 	Entity* ent = __firstFree; //remember __firstFree is an Entity pointer already, we don't need to &__firstFree it.
 
 	if(__firstFree != NULL) __firstFree = __firstFree->next; //Don't fuck up, read this line until you understand it.
 
-	return ent; //hmmm, I wonder what happens if __firstFree was NULL?
+	if(!ent) return NULL; 
+
+	void (*func)(void* data) = init[entType];
+	if(func) func(&__entityList[i].data);
+
+	if(ent) return (void*) &ent->data;
 
 	//RIP DJ's CODE
 
@@ -56,6 +73,20 @@ Entity* GetEntity()
 	}
 	return NULL;
 	*/
+}
+
+Projectile* GetProjectile(int player)
+{
+	Entity* ent = __GetEntity(PROJECTILE);
+	if(!ent) return NULL;
+
+	ent->entType = PROJECTILE;
+
+	Projectile* projectile = &ent->data.projectile;
+
+	//
+
+	return projectile;
 }
 
 void InitEntityList()
@@ -83,7 +114,6 @@ void InitEntityList()
 	}
 
 	__entityList[__maxEntities-1].next = NULL;
-
 }
 
 void ThinkEntityList()
@@ -93,7 +123,8 @@ void ThinkEntityList()
 	{
 		if(__entityList[i].used)
 		{
-			if(__entityList[i].think != NULL) __entityList[i].think(&__entityList[i]);
+			void (*func)(void* data) = think[__entityList[i].entType];
+			if(__entityList[i].update != NULL) if(func) func(&__entityList[i].data);
 		}
 	}
 }
@@ -105,7 +136,8 @@ void UpdateEntityList()
 	{
 		if(__entityList[i].used)
 		{
-			if(__entityList[i].update != NULL) __entityList[i].update(&__entityList[i]);
+			void (*func)(void* data) = update[__entityList[i].entType];
+			if(__entityList[i].update != NULL) if(func) func(&__entityList[i].data);
 		}
 	}
 }
