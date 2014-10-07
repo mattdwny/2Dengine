@@ -26,96 +26,6 @@ Uint32 NOW;					//the current time since program started
 Uint32 rmask,gmask,bmask,amask;
 ScreenData  S_Data;
 
-int getImagePathFromFile(char *filepath,char * filename)
-{
-    FILE *fileptr = NULL;
-    char buf[255];
-    int returnValue = -1;
-    if (!filepath)
-    {
-        fprintf(stdout,"getImagePathFromFile: warning, no output parameter provided\n");
-        return -1;
-    }
-    if (!filename)
-    {
-        fprintf(stdout,"getImagePathFromFile: warning, no input file path provided\n");
-        return -1;
-    }
-    fileptr = fopen(filename,"r");
-    if (!fileptr)
-    {
-        fprintf(stderr,"unable to open file: %s\n",filename);
-        return -1;
-    }
-    if (fscanf_s(fileptr,"%s",buf))
-    {
-        if (strcmp(buf,"image:")==0)
-        {
-            fscanf_s(fileptr,"%s",filepath);
-            returnValue = 0;
-        }
-    }
-    fclose(fileptr);
-    return returnValue;
-}
-
-void addCoordinateToFile(char *filepath,int x, int y)
-{
-    FILE *fileptr = NULL;
-    if (!filepath)
-    {
-        fprintf(stdout,"addCoordinateToFile: warning, no input file path provided\n");
-        return;
-    }
-    fileptr = fopen(filepath,"a");
-    if (!fileptr)
-    {
-        fprintf(stderr,"unable to open file: %s\n",filepath);
-        return;
-    }
-    fprintf(fileptr,"newcoordinate: %i %i\n",x,y);
-    fclose(fileptr);
-}
-
-int getCoordinatesFromFile(int *x, int *y,char * filename)
-{
-    FILE *fileptr = NULL;
-    char buf[255];
-    int tx,ty;
-    int returnValue = -1;
-    if ((!x)&&(!y))
-    {
-        fprintf(stdout,"getCoordinatesFromFile: warning, no output parameter provided\n");
-        return -1;
-    }
-    if (!filename)
-    {
-        fprintf(stdout,"getCoordinatesFromFile: warning, no input file path provided\n");
-        return -1;
-    }
-    fileptr = fopen(filename,"r");
-    if (!fileptr)
-    {
-        fprintf(stderr,"unable to open file: %s\n",filename);
-        return -1;
-    }
-    while (fscanf_s(fileptr,"%s",buf) != EOF)
-    {
-        fprintf(stdout,"buf is: %s\n",buf);
-        if (strcmp(buf,"position:")==0)
-        {
-            fscanf_s(fileptr,"%i %i",&tx,&ty);
-            fprintf(stdout,"as read: %i, %i\n",tx,ty);
-            returnValue = 0;
-        }
-    }
-    fclose(fileptr);
-    if (x)*x = tx;
-    if (y)*y = ty;
-    return returnValue;
-}
-
-
 void InitGraphics()
 {
     Uint32 Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT;
@@ -221,7 +131,7 @@ void NextFrame()
 	Then = NOW;									/*these next few lines  are used to show how long each frame takes to update.  */
 	NOW = SDL_GetTicks();
 	//fprintf(stdout,"Ticks passed this frame: %i\n", NOW - Then);
-	FrameDelay(10); /*this will make your frame rate about 30 frames per second.  If you want 60 fps then set it to about 15 or 16*/
+	FrameDelay(10); /*this will make the frame rate about 100 frames per second.*/
 }
 
 /**
@@ -243,15 +153,15 @@ void InitSpriteList()
 /**
  * LoadSprite default
  */
-Sprite* LoadSprite(char* filename, int sizex, int sizey)
+Sprite* LoadSprite(char* filename, int sizex, int frames, int sizey)
 {
-	return LoadSprite(filename, sizex, sizey, -1, -1, -1);
+	return LoadSprite(filename, sizex, sizey, frames, -1, -1, -1);
 }
 /**
  * Overloaded LoadSwappedSprite Equivalent
  * Create a sprite from a file, the most common use for it.
  */
-Sprite* LoadSprite(char* filename, int sizex, int sizey, int c1, int c2, int c3)
+Sprite* LoadSprite(char* filename, int sizex, int sizey, int frames, int c1, int c2, int c3)
 {
 	int i;
 	SDL_Surface* temp;
@@ -263,6 +173,7 @@ Sprite* LoadSprite(char* filename, int sizex, int sizey, int c1, int c2, int c3)
 		   (c1 == __spriteList[i].color1) && (c2 == __spriteList[i].color2) && (c3 == __spriteList[i].color3))
 		{
 			__spriteList[i].used++;
+			//fprintf(stderr,"HEX: /%x/", &__spriteList[i]);
 			return &__spriteList[i];
 		}
 	}
@@ -289,7 +200,7 @@ Sprite* LoadSprite(char* filename, int sizex, int sizey, int c1, int c2, int c3)
 		exit(1);
 	}
 
-	__spriteList[i].image = SDL_DisplayFormat(temp);
+	__spriteList[i].image = SDL_DisplayFormatAlpha(temp); //FIXME: XXX
 	SDL_FreeSurface(temp);
 
 	//sets a transparent color for blitting.
@@ -306,11 +217,14 @@ Sprite* LoadSprite(char* filename, int sizex, int sizey, int c1, int c2, int c3)
 	__spriteList[i].w = sizex;
 	__spriteList[i].h = sizey;
 	__spriteList[i].used++;
+	__spriteList[i].frames = frames;
 
 	//add color info
 	__spriteList[i].color1 = c1;
 	__spriteList[i].color2 = c2;
 	__spriteList[i].color3 = c3;
+	
+	//fprintf(stderr,"HEX: /%x/", &__spriteList[i]);
 
 	return &__spriteList[i];
 }
@@ -351,7 +265,13 @@ void CloseSprites()
 		FreeSprite(&spriteptr);
 	}
 }
-
+/**
+ * overloaded draw for external calls
+ */
+void DrawSprite(Sprite* sprite, int sx, int sy, int frame)
+{
+	DrawSprite(sprite, screen, sx, sy, frame);
+}
 /**
  * Conjecture: uses SDL_image to draw all of the pixels in a sprite onto a screen denoted by a rectangle
  */
@@ -869,7 +789,7 @@ void SwapSprite(SDL_Surface *sprite,int color1,int color2,int color3)
  */
 void InitMouse()
 {
-	Msprite = LoadSprite("images/CHAR1.jpg",16, 16);
+	Msprite = LoadSprite("images/hypersphere.png",64, 64, 192);
 	if(Msprite == NULL) fprintf(stdout,"mouse didn't load\n");
 	Mouse.state = 0;
 	Mouse.shown = 0;
@@ -886,8 +806,7 @@ void DrawMouse()
 	int mx,my;
 	SDL_GetMouseState(&mx, &my);
 	if(Msprite != NULL) DrawSprite(Msprite, screen, mx, my, Mouse.frame);
-	Mouse.frame = (Mouse.frame + 1) % 16;
-	//Mouse.frame = (Mouse.frame + 1) % 194;
+	Mouse.frame = (Mouse.frame + 1) % Msprite->frames;
 	Mouse.x = mx;
 	Mouse.y = my;
 }

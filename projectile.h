@@ -11,10 +11,14 @@ typedef struct Projectile_S
 	int frame;
 	vec2d pos;
 	vec2d vel;
-	SDL_Rect BBox;
+	AABB BBox;
 	float radius;
 } Projectile;
 
-void FreeProjectile(Projectile* proj);
+void* ProjectileInit(void* data);
+void  ProjectileDestroy(void* data);
+void  ProjectileDraw(void* data);
+void  ProjectileThink(void* data);
+void  ProjectileUpdate(void* data);
 
 #endif

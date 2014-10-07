@@ -4,29 +4,62 @@
 
 Fighter* fighters[__maxFighters];
 
-void InitFighter(void* voidptr)
+
+
+void* FighterInit(void* data)
 {
-	Fighter* fighter = (Fighter*) voidptr;
+	if(!data) return NULL;
+
+	Fighter* fighter = (Fighter*) data;
 
 	fighter->fightState = STAND;
 
 	//...
+
+	return data;
 }
 
-
-void DrawFighter()
+void FighterDestroy(void* data)
 {
+	if(!data) return;
 
+	Fighter* fighter = (Fighter*) data;
+
+	//...
 }
 
-void FreeFighter(Fighter* fighter)
+void FighterDraw(void* data)
 {
+	Fighter* fighter;
 
+	if(!data) return;
+
+	fighter = (Fighter*) data;
+
+	//fprintf(stderr, "Check: /%x/", fighter->sprite);
+
+	if(fighter == NULL)
+	{
+		fprintf(stderr, "Critical Error, nonexistant fighter");
+		return;
+	}
+
+	if(fighter->sprite == NULL) return; //nothing to draw
+
+	DrawSprite(fighter->sprite, (int) fighter->pos[0], (int) fighter->pos[1], fighter->frame);
+
+	fighter->frame = (fighter->frame + 1) % fighter->sprite->frames;
 }
 
-void FighterThink(Fighter* fighterInfo)
+void FighterThink(void* data)
 {
-	switch(fighterInfo->fightState)
+	if(!data) return;
+
+	Fighter* fighter = (Fighter*) data;
+
+	//...
+
+	switch(fighter->fightState)
 	{
 		case STAND:
 			//to crouch
@@ -84,4 +117,13 @@ void FighterThink(Fighter* fighterInfo)
 		case GRABBED:
 			break;
 	}
+}
+
+void FighterUpdate(void* data)
+{
+	if(!data) return;
+
+	Fighter* fighter = (Fighter*) data;
+
+	//...
 }

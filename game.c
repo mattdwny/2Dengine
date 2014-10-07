@@ -4,12 +4,16 @@
 #include "graphics.h"
 #include "glib.h"
 #include "vector2.h"
+#include "entity.h"
 
 extern SDL_Surface* screen;
 extern SDL_Surface* buffer; //pointer to the draw buffer
 extern SDL_Rect Camera;
 
 void InitAll();
+void InitFighters();
+void InitPlayer(char* str, float x, float y);
+void InitPlayer(char* str, float x, float y, int c);
 void CleanupAll();
 void ProcessInput();
 
@@ -35,14 +39,14 @@ int main(int argc, char* argv[])
 	InitAll();
 
 	temp = IMG_Load("images/fire_and_ice.jpg");
-	//temp = IMG_Load("images/bgtest.png"); // notice that the path is part of the filename
+	
 	if(temp != NULL) bg = SDL_DisplayFormat(temp); // ALWAYS check your pointers before you use them
 
 	SDL_FreeSurface(temp);
 
 	if(bg != NULL) SDL_BlitSurface(bg, NULL, buffer, NULL);
 
-	tile = LoadSprite("images/32_32_16_2sprite.png", 32, 32);
+	tile = LoadSprite("images/32_32_16_2sprite.png", 32, 32, 32);
 
 	if(tile != NULL)
 	{
@@ -54,12 +58,18 @@ int main(int argc, char* argv[])
 
 	do
 	{
+		//Draw Events
 		ResetBuffer ();
+		DrawEntityList();
 		DrawMouse();
 		NextFrame();
+
+		//Input and Action Events
 		SDL_PumpEvents();
 		keys = SDL_GetKeyState(&keyn);
 		//ProcessInput();
+		//ThinkEntityList();
+		//UpdateEntityList();
 
 		if(SDL_GetMouseState(&mx,&my)) DrawSprite(tile, buffer, (mx /32) * 32, (my /32) * 32, 0); 
 
@@ -78,6 +88,7 @@ int main(int argc, char* argv[])
 void CleanUpAll()
 {
 	CloseSprites();
+	CloseEntityList();
 	//any other cleanup functions can be added here
 }
 
@@ -87,9 +98,32 @@ void CleanUpAll()
 void InitAll()
 {
 	InitGraphics();
-
+	InitEntityList();
+	InitFighters();
 	InitMouse();
 	atexit(CleanUpAll);
+}
+
+void InitFighters()
+{
+	InitPlayer("images/hypersphere.png", 200, 600);
+	InitPlayer("images/hypersphere.png", 800, 600, Magenta_);
+}
+
+void InitPlayer(char* str, float x, float y)
+{
+	InitPlayer(str, x, y, -1);
+}
+void InitPlayer(char* str, float x, float y, int c)
+{
+	Fighter* fighter = (Fighter*) GetEntity(FIGHTER);
+
+	//fprintf(stderr,"Worked I guess");
+
+	fighter->sprite = LoadSprite(str, 64, 64, 192, c, c, c);
+	fighter->frame = 0;
+	fighter->pos[0] = x;
+	fighter->pos[1] = y;
 }
 
 void ProcessInput()

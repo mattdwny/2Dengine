@@ -5,7 +5,7 @@
 #include "vector2.h"
 #include "AABB.h"
 
-typedef enum { STAND, CROUCH, MOVE, FALL, FASTFALL, ROLL, SPOT_DODGE, AIR_DODGE, TUMBLE, GROUND_STUN, AIR_STUN, TECH, BLOCK, GRAB, AIR_GRAB, GRABBED } FighterState;
+typedef enum { STAND = 0, CROUCH, MOVE, FALL, FASTFALL, ROLL, SPOT_DODGE, AIR_DODGE, TUMBLE, GROUND_STUN, AIR_STUN, TECH, BLOCK, GRAB, AIR_GRAB, GRABBED } FighterState;
 
 typedef struct Fighter_S
 {
@@ -15,13 +15,15 @@ typedef struct Fighter_S
 	int frame;
 	vec2d pos;
 	vec2d vel;
-	SDL_Rect BBox;
+	AABB BBox;
 	float radius;
 	int maxJumps;
 } Fighter;
 
-void DrawFighter();
-void FreeFighter(Fighter* fighter);
-void FighterThink(Fighter* fighterInfo);
+void* FighterInit(void* data);
+void  FighterDestroy(void* data);
+void  FighterDraw(void* data);
+void  FighterThink(void* data);
+void  FighterUpdate(void* data);
 
 #endif

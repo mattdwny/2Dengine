@@ -61,13 +61,12 @@ typedef struct Entity_S
 	Data data;
 } Entity;
 
-void CloseEntityList();
-void DrawEntityList();
-void FreeEntity(Entity** ent);
-Fighter* GetFighter(int player, int fighterId, int color);
-Projectile* GetProjectile(int player);
-void InitEntityList();
-void ThinkEntityList();
-void UpdateEntityList();
+void  CloseEntityList();
+void  DrawEntityList();
+void  FreeEntity(Entity** ent);
+void* GetEntity(EntityType entType);
+void  InitEntityList();
+void  ThinkEntityList();
+void  UpdateEntityList();
 
 #endif
