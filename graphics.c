@@ -109,7 +109,7 @@ void InitGraphics()
     Camera.w = screen->w; //we want to make sure that our camera is the same size of the video screen
     Camera.h = screen->h;
     SDL_ShowCursor(SDL_DISABLE);//don't show the mouse
-    SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY,SDL_DEFAULT_REPEAT_INTERVAL);
+    SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY,SDL_DEFAULT_REPEAT_INTERVAL); //TODO: move
 }
 
 /**

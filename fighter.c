@@ -63,9 +63,13 @@ void FighterThink(void* data)
 	{
 		case STAND:
 			//to crouch
+
 			//to block
+
 			//to move
+
 			//to jump
+
 			break;
 		case BLOCK:
 			//to grab

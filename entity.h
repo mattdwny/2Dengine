@@ -56,6 +56,7 @@ typedef struct Entity_S
 	int visible; //should we render the object?
 
 	EntityType entType;
+	AABB rect;
 
     struct Entity_S* next;
 	Data data;

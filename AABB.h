@@ -3,10 +3,8 @@
 
 typedef struct AABB_S
 {
-	int minX;
-	int maxX;
-	int minY;
-	int maxY;
+	float min[2];
+	float max[2];
 } AABB;
 
 int boxOnBox(AABB first, AABB second);
