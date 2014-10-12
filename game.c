@@ -79,7 +79,7 @@ void InitAll()
 	InitEntityList();
 	InitFighters();
 	InitMouse();
-	InitController();
+	//InitController();
 	atexit(CleanUpAll);
 }
 

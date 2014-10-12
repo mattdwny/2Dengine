@@ -3,14 +3,23 @@
 
 #define MIN(A,B) (A < B ? A : B)
 
+int   axes[4];
+Uint8 buttons[5];
+const Uint8* keyboard;
+
+
+
 void InitController()
 {
+	int i;
+	int numJoysticks;
+	
 	SDL_Init(SDL_INIT_JOYSTICK);
 	atexit(SDL_Quit);
 
-	int num_joysticks = SDL_NumJoysticks();
-	int i;
-	for(i = 0; i < MIN(num_joysticks,2); ++i)
+	numJoysticks = SDL_NumJoysticks();
+
+	for(i = 0; i < MIN(numJoysticks,2); ++i)
 	{
 		SDL_Joystick* js = SDL_JoystickOpen(i);
 		if (js)
@@ -20,8 +29,7 @@ void InitController()
 			int num_hats = SDL_JoystickNumHats(js);
 			int num_balls = SDL_JoystickNumBalls(js);
 
-			printf("%d:\t axes:%d buttons:%d hats:%d balls:%d\n", i,
-					num_axes, num_buttons, num_hats, num_balls);
+			printf("#%d:\t axes:%d buttons:%d hats:%d balls:%d\n", i, num_axes, num_buttons, num_hats, num_balls);
 
 			SDL_JoystickClose(js);
 		}
@@ -38,20 +46,15 @@ void ProcessInput()
 	{
 		switch( event.type )
 		{
-			/* Keyboard event */
-			/* Pass the event data onto PrintKeyInfo() */
 			case SDL_KEYDOWN:
+				if(event.key.keysym.sym == SDLK_ESCAPE) exit(-1);
+				break;
 			case SDL_KEYUP:
-			//PrintKeyInfo( &event.key );
-			break;
-
-			/* SDL_QUIT event (window close) */
-			case SDL_QUIT:
-				exit(1);
-			break;
+				
+				break;
 
 			default:
-			break;
+				break;
 		}
 	}
 }
