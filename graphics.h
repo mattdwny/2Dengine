@@ -67,7 +67,7 @@ typedef struct
 
 typedef struct	//this didn't need to be its own type, its only used once
 {
-	int xres, yres, depth;
+	static int xres, yres, depth;
 } ScreenData;
 
 void InitGraphics();

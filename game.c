@@ -6,6 +6,7 @@
 #include "vector2.h"
 #include "entity.h"
 #include "controller.h"
+#include "quadtree.h"
 
 extern SDL_Surface* screen;
 extern SDL_Surface* buffer; //pointer to the draw buffer
@@ -26,6 +27,9 @@ int quit = 0;
  */
 int main(int argc, char* argv[])
 {
+	Entity* ent;
+	Entity* out[16];
+
 	SDL_Surface* temp;
 	SDL_Surface* bg;
 
@@ -52,6 +56,8 @@ int main(int argc, char* argv[])
 		ProcessInput();
 		//ThinkEntityList();
 		//UpdateEntityList();
+		PrepareQuadtrees();
+		RetrieveCollisions(ent, (Entity* (*)[]) &out);
 
 	} while(!quit);
 

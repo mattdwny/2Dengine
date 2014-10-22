@@ -7,6 +7,6 @@ typedef struct AABB_S
 	float max[2];
 } AABB;
 
-int boxOnBox(AABB first, AABB second);
+int BoxOnBox(AABB* first, AABB* second);
 
 #endif

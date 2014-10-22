@@ -19,6 +19,7 @@ typedef struct Quadtree_S /* note: 1 + 1 + 1 + 21 + 1*4 + 4*1 = 32 */
 	struct Quadtree_S* submatrix[4]; /** the array of pointers to subtrees */
 } Quadtree;
 
-
+void PrepareQuadtrees();
+int RetrieveCollisions(Entity* ent, Entity* (*out)[]);
 
 #endif
