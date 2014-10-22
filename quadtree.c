@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 #include "quadtree.h"
+#include "game.h"
 
 #define __maxDepth 3 /* the max number of quadtrees dereferences to get to target quadtree from root */
 #define __targetSize 5 /* the preferred number of objects that should reside within the quadtree */
@@ -74,14 +75,17 @@ void FreeQuadtree(Quadtree* quad)
  */
 void SplitQuadtree(Quadtree* quad)
 {
-	int nextDepth = quad->depth + 1;
+	int nextDepth;
+	float minWidth, minHeight, maxWidth, maxHeight, halfWidth, halfHeight; 
 
-	float minWidth   = floor(quad->bounds.min[0]);
-	float minHeight  = floor(quad->bounds.min[1]);
-	float maxWidth   = ceil(quad->bounds.max[0] + 1);
-	float maxHeight  = ceil(quad->bounds.max[1] + 1);
-	float halfWidth  = (minWidth  + maxWidth ) / 2;
-	float halfHeight = (minHeight + maxHeight) / 2;
+	nextDepth = quad->depth + 1;
+
+	minWidth   = floor(quad->bounds.min[0]);
+	minHeight  = floor(quad->bounds.min[1]);
+	maxWidth   = ceil(quad->bounds.max[0] + 1);
+	maxHeight  = ceil(quad->bounds.max[1] + 1);
+	halfWidth  = floor((minWidth  + maxWidth ) / 2); // I can choose floor or ceil, the decision is irrelevant really
+	halfHeight = floor((minHeight + maxHeight) / 2);
  
 	quad->submatrix[0] = GetQuadtree(nextDepth, minWidth, halfWidth, minHeight, halfHeight); /* Create all four quadrant permutations */
 	quad->submatrix[1] = GetQuadtree(nextDepth, halfWidth, maxWidth, minHeight, halfHeight);
@@ -123,7 +127,7 @@ int GetQuadtreeIndex(AABB* rect, Quadtree* quad)
 	return index;
 }
 
-/*
+/**
  * Insert the object into the quadtree. If the node
  * exceeds the capacity, it will split and add all
  * objects to their corresponding nodes.
@@ -131,62 +135,77 @@ int GetQuadtreeIndex(AABB* rect, Quadtree* quad)
  void InsertCollider(Entity* ent, Quadtree* quad)
  {
 	int i;
-	int objects;
 	int index;
+	int objects;
+	Entity** spot;
 
-	if (quad->submatrix[0] != NULL) /* either all quadtrees in submatrix are null or none are */
+	objects = quad->objects;
+
+	if (quad->submatrix[0] != NULL) /* either all quadtrees in submatrix are null or none are, hence why split creates 4 subtrees */
 	{
-		index = GetQuadtreeIndex(&ent->rect, quad);
- 
+		index = GetQuadtreeIndex(&ent->rect, quad); // first try putting the object in the submatrix
 		if (index != -1)
 		{
 			InsertCollider(ent, quad->submatrix[index]);
 			return;
 		}
 	}
-
-	objects = quad->objects;
 	
-	if(objects >= 21)
-	{
-		fprintf(stderr, "FATAL ERROR: Too many objects in one quadtree\n");
-		exit(-1);
-	}
+	if(objects >= 21) CRASH("FATAL ERROR: Too many objects in one quadtree");
 
-	quad->list[objects] = ent;
-
+	spot = &quad->list[0]; //pointer to the first entity pointer
+	while(*spot != NULL) spot++; //check the next item in the list. Equivalent to (quad->list[0])-->(quad->list[1]), (quad->list[1])-->(quad->list[2])
+	*spot = ent;
+	quad->objects++; //do the physical addition, how could I forget?
+	//quad->list[objects] = ent; //Hmmm, I wonder why this is not equivalent?
+	
 	if (objects > __targetSize && quad->depth < __maxDepth)
 	{
-		if (quad->submatrix[0] == NULL)
-		{	
-			SplitQuadtree(quad); 
+		if (quad->submatrix[0] == NULL) //one of the few optimizations I did right, only do the for loop when you split the quadtree, otherwise the add will properly delegate
+		{
+			SplitQuadtree(quad);
  
-			while (i < objects) /* relocate any applicable objects */
+			//while (i < objects) //same reason, why didn't this work?
+			for(i = 0; i < 21; i++) /* relocate any applicable objects */
 			{
+				if(!quad->list[i]) continue;
+
 				index = GetQuadtreeIndex(&quad->list[i]->rect,quad); 
 				if (index != -1)
 				{
 					InsertCollider(quad->list[i], quad->submatrix[index]); /* move the collider into the lower levels */
 					quad->list[i] = NULL; /* remove previous entity that has moved down a level */
+					quad->objects--; //do the physical subtraction, how could I forget?
 				}
-				i++;
+				//i++;
 			}
 		}
 	}
 }
 
-/*
+/**
  * Return all objects that could potentially collide with the given object
  */
-void RetrieveCollisions(AABB* rect, Quadtree* quad, Entity* (*ents)[], int cur) /* a pointer to an array of Entity pointers */
+void RetrieveCollisions(AABB* rect, Quadtree* quad, Entity* (*ents)[] /*a pointer to an array populated by (initially) NULL Entity pointers*/,
+						int cursor) /*starts at zero, moves forward as Entity pointers are added to the array of "ents"*/
 {
 	int i;
+	int index;
+	Entity* temp;
 
-	int index = GetQuadtreeIndex(rect, quad);
-	if (index != -1 && quad->submatrix[0] != NULL) RetrieveCollisions(rect, quad->submatrix[index], ents, cur);
-
-	while((*ents)[i] = quad->list[i])
+	//this has to go first otherwise there is an error with the cursor!
+	for(i = 0; i < 21; i++) //shit code --> while((*ents)[i] = quad->list[i]) <--proof I cannot code late at night // wow (*ents)[i] not (*ents)[cursor], two issues. Granted I didn't compile to figure out this dumbness
 	{
-		cur++; /* this is only safe because the quadtree is recreated each frame */
+		temp = quad->list[i];
+		if(temp)
+		{
+			(*ents)[cursor] = temp;
+			cursor++;
+
+			if(cursor >= 16) CRASH("Too many collisions returned from Quadtree, there could be an issue.");
+		}
 	}
+
+	index = GetQuadtreeIndex(rect, quad);
+	if (index != -1 && quad->submatrix[0] != NULL) RetrieveCollisions(rect, quad->submatrix[index], ents, cursor); //recursive call, which terminates at maxDepth or sooner
 }
