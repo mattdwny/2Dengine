@@ -9,7 +9,7 @@ const Uint8* keyboard;
 
 
 
-void InitController()
+/*void InitController()
 {
 	int i;
 	int numJoysticks;
@@ -34,7 +34,7 @@ void InitController()
 			SDL_JoystickClose(js);
 		}
 	}
-}
+}*/
 
 void ProcessInput()
 {

@@ -12,39 +12,42 @@
 #include "SDL_image.h"
 #include "SDL_ttf.h"
 
+#define ResolutionX_ 1024
+#define ResolutionY_ 768
+
 /*uint32*/
-#define Red_         0xDD0000
-#define Green_       0x00DD00
-#define Blue_        0x0000DD
-#define Yellow_      0xDDDD00
-#define Orange_      0xEE5522
-#define Violet_      0xDD00DD
-#define Brown_       0x663311
-#define Grey_        0x888888
-#define DarkRed_     0x880000
-#define DarkGreen_   0x008800
-#define DarkBlue_    0x000088
-#define DarkYellow_  0x888800
-#define DarkOrange_  0x774411
-#define DarkViolet_  0x660066
-#define DarkBrown_   0x442205
-#define DarkGrey_    0x444444
-#define LightRed_    0xFF2222
-#define LightGreen_  0x33FF33
-#define LightBlue_   0x3333FF
-#define LightYellow_ 0xFFFF11
-#define LightOrange_ 0xFFDD11
-#define LightViolet_ 0xFF55FF
-#define LightBrown_  0x886622
-#define LightGrey_   0xBBBBBB
-#define Black_       0x000000
-#define White_       0xFEFEFE
-#define Tan_         0xFFDD22
-#define Gold_        0xBB9900
-#define Silver_      0xAAAABB
-#define YellowGreen_ 0x44EE01
-#define Cyan_        0x00FFFF
-#define Magenta_     0xFF00FF
+#define Red_         0xFFDD0000 //AAAAHHHH this is not including the implicit A at the front!!!! likely set to zero!
+#define Green_       0xFF00DD00
+#define Blue_        0xFF0000DD
+#define Yellow_      0xFFDDDD00
+#define Orange_      0xFFEE5522
+#define Violet_      0xFFDD00DD
+#define Brown_       0xFF663311
+#define Grey_        0xFF888888
+#define DarkRed_     0xFF880000
+#define DarkGreen_   0xFF008800
+#define DarkBlue_    0xFF000088
+#define DarkYellow_  0xFF888800
+#define DarkOrange_  0xFF774411
+#define DarkViolet_  0xFF660066
+#define DarkBrown_   0xFF442205
+#define DarkGrey_    0xFF444444
+#define LightRed_    0xFFFF2222
+#define LightGreen_  0xFF33FF33
+#define LightBlue_   0xFF3333FF
+#define LightYellow_ 0xFFFFFF11
+#define LightOrange_ 0xFFFFDD11
+#define LightViolet_ 0xFFFF55FF
+#define LightBrown_  0xFF886622
+#define LightGrey_   0xFFBBBBBB
+#define Black_       0xFF000000
+#define White_       0xFFFEFEFE
+#define Tan_         0xFFFFDD22
+#define Gold_        0xFFBB9900
+#define Silver_      0xFFAAAABB
+#define YellowGreen_ 0xFF44EE01
+#define Cyan_        0xFF00FFFF
+#define Magenta_     0xFFFF00FF
 
 /**
  * color constants:
@@ -67,7 +70,7 @@ typedef struct
 
 typedef struct	//this didn't need to be its own type, its only used once
 {
-	static int xres, yres, depth;
+	int xres, yres, depth;
 } ScreenData;
 
 void InitGraphics();
@@ -98,5 +101,7 @@ void ResetBuffer();
 void NextFrame();
 void InitMouse();
 void DrawMouse();
+void fill_circle(SDL_Surface *surface, int n_cx, int n_cy, int radius, Uint32 pixel);
+Uint32 colorLerp(Uint32 color1, Uint32 color2, float t);
 
 #endif

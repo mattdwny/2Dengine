@@ -6,7 +6,6 @@
 #include "vector2.h"
 #include "entity.h"
 #include "controller.h"
-#include "quadtree.h"
 
 extern SDL_Surface* screen;
 extern SDL_Surface* buffer; //pointer to the draw buffer
@@ -27,9 +26,6 @@ int quit = 0;
  */
 int main(int argc, char* argv[])
 {
-	Entity* ent;
-	Entity* out[16];
-
 	SDL_Surface* temp;
 	SDL_Surface* bg;
 
@@ -51,13 +47,19 @@ int main(int argc, char* argv[])
 		DrawMouse();
 		NextFrame();
 
+		Uint32 green = colorLerp(Red_, Blue_, 0.5f); //that's how that works, right?
+
+		fprintf(stderr, "%x\n", green);
+
+		//fill_circle(screen, 400, 400, 5, Red_);
+
 		//Input and Action Events
 		SDL_PumpEvents();
 		ProcessInput();
 		//ThinkEntityList();
+		//PopulateQuadtrees();
 		//UpdateEntityList();
-		PrepareQuadtrees();
-		RetrieveCollisions(ent, (Entity* (*)[]) &out);
+		//printf("This should print\n");
 
 	} while(!quit);
 

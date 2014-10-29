@@ -46,7 +46,7 @@ void FighterDraw(void* data)
 
 	if(fighter->sprite == NULL) return; //nothing to draw
 
-	DrawSprite(fighter->sprite, (int) fighter->pos[0], (int) fighter->pos[1], fighter->frame);
+	DrawSprite(fighter->sprite, (int) fighter->pos[0] - 32, (int) fighter->pos[1] - 32, fighter->frame); //draw the player so he is centered, hence -32
 
 	fighter->frame = (fighter->frame + 1) % fighter->sprite->frames;
 }

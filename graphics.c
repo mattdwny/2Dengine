@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "graphics.h"
 
@@ -386,6 +387,7 @@ Uint32 __GetPixel(SDL_Surface* surface, int x, int y)
  */
 void __PutPixel(SDL_Surface* surface, int x, int y, Uint32 pixel)
 {
+	if(x < 0 || x >= ResolutionX_ || y < 0 || y >= ResolutionY_){ fprintf(stderr,"%i, %i\n",x,y); return; } //draw circle isn't safe, so this is necessary.
     //Here p is the address to the pixel we want to set
     Uint8 *p = (Uint8*) surface->pixels + y * surface->pitch + x * surface->format->BytesPerPixel;
 
@@ -811,3 +813,86 @@ void DrawMouse()
 	Mouse.y = my;
 }
 
+/*
+ * SDL_Surface 32-bit circle-fill algorithm without using trig
+ *
+ * While I humbly call this "Celdecea's Method", odds are that the 
+ * procedure has already been documented somewhere long ago.  All of
+ * the circle-fill examples I came across utilized trig functions or
+ * scanning neighbor pixels.  This algorithm identifies the width of
+ * a semi-circle at each pixel height and draws a scan-line covering
+ * that width.  
+ *
+ * The code is not optimized but very fast, owing to the fact that it
+ * alters pixels in the provided surface directly rather than through
+ * function calls.
+ *
+ * WARNING:  This function does not lock surfaces before altering, so
+ * use SDL_LockSurface in any release situation.
+ */
+void fill_circle(SDL_Surface *surface, int cx, int cy, int radius, Uint32 pixel)
+{
+    // Note that there is more to altering the bitrate of this 
+    // method than just changing this value.  See how pixels are
+    // altered at the following web page for tips:
+    //   http://www.libsdl.org/intro.en/usingvideo.html
+    static const int BPP = 4;
+ 
+    double r = (double)radius;
+ 
+    for (double dy = 1; dy <= r; dy += 1.0)
+    {
+        // This loop is unrolled a bit, only iterating through half of the
+        // height of the circle.  The result is used to draw a scan line and
+        // its mirror image below it.
+ 
+        // The following formula has been simplified from our original.  We
+        // are using half of the width of the circle because we are provided
+        // with a center and we need left/right coordinates.
+ 
+        double dx = floor(sqrt((2.0 * r * dy) - (dy * dy)));
+        int x = cx - dx;
+ 
+        // Grab a pointer to the left-most pixel for each half of the circle
+        Uint8 *target_pixel_a = (Uint8 *)surface->pixels + ((int)(cy + r - dy)) * surface->pitch + x * BPP;
+        Uint8 *target_pixel_b = (Uint8 *)surface->pixels + ((int)(cy - r + dy)) * surface->pitch + x * BPP;
+ 
+        for (; x <= cx + dx; x++)
+        {
+            *(Uint32 *)target_pixel_a = pixel;
+            *(Uint32 *)target_pixel_b = pixel;
+            target_pixel_a += BPP;
+            target_pixel_b += BPP;
+        }
+    }
+}
+
+Uint32 colorLerp(Uint32 color1, Uint32 color2, float t) //shouldn't be a bottleneck, so I can be informative about the thought process
+{
+	int i;
+	Uint8 rgba1[4];
+	Uint8 rgba2[4];
+	Uint8 result[4];
+	Uint32 result32;
+
+	rgba1[0] = (color1 >> 16); //memory format is ARGB, hence red is 0xFF0000 and blue is 0x0000FF where "A" is omitted
+	rgba2[0] = (color2 >> 16);
+
+	rgba1[1] = (color1 >> 8);
+	rgba2[1] = (color2 >> 8);
+
+	rgba1[2] = (color1 >> 0);
+	rgba2[2] = (color2 >> 0);
+
+	rgba1[3] = (color1 >> 24);
+	rgba2[3] = (color2 >> 24);
+
+	for(i = 0; i < 4; ++i)
+	{
+		result[i] = (Uint8) ((float) rgba1[i]) * t + ( ((float) rgba2[i]) * ( 1.0f - t ) );
+	}
+
+	result32 = (result[0] << 16) & (result[1] << 8) & (result[2] << 0) & (result[3] << 24);
+
+	return result32;
+}

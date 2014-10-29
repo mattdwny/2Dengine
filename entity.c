@@ -1,6 +1,7 @@
 #include "entity.h"
+#include "quadtree.h"
 
-#define __maxEntities 512
+#define __maxEntities 32
 #define __entityPermutation 3
 
 void __funcPtrInit();
@@ -165,6 +166,45 @@ void UpdateEntityList()
 		{
 			void (*func)(void* data) = update[__entityList[i].entType];
 			if(func) func(&__entityList[i].data);
+		}
+	}
+}
+
+void PopulateQuadtrees()
+{
+	Entity* ent;
+
+	PrepareQuadtrees();
+	for(int i = 0; i < __maxEntities; i++)
+	{
+		ent = &__entityList[i];
+		if(!ent->used) continue;
+
+		InsertCollider(ent, &ent->rect);
+	}
+}
+
+void FetchCollisions(Entity* player)
+{
+	Entity* out[16];
+	int i;
+	float x, y, mag;
+	float x1, y1, r1;
+	float x2, y2, r2;
+
+	RetrieveCollisions(&player->rect, (void* (*)[]) &out);
+
+	AABBtoCircle(&player->rect, &x1, &y1, &r1);
+
+	for(i = 0; i < 16; i++)
+	{
+		if(!out[i]) continue;
+
+		AABBtoCircle(&out[i]->rect, &x2, &y2, &r2);
+
+		if(CircleOnCircle(x1,y1,r1,x2,y2,r2,&x,&y))
+		{
+			mag = sqrt(x*x + y*y);
 		}
 	}
 }

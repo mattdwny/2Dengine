@@ -68,6 +68,7 @@ void  FreeEntity(Entity** ent);
 void* GetEntity(EntityType entType);
 void  InitEntityList();
 void  ThinkEntityList();
+void  PopulateQuadtrees();
 void  UpdateEntityList();
 
 #endif

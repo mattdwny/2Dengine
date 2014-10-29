@@ -2,11 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "quadtree.h"
 #include "game.h"
-#include "graphics.h"
-
-//extern ScreenData;
+#include "quadtree.h"
 
 #define __maxCollisions 16 /*the maximum number of collisions allowed by the game engine*/
 #define __maxDepth 3 /* the max number of quadtrees dereferences to get to target quadtree from root */
@@ -46,7 +43,7 @@ void PrepareQuadtrees()
 
 	__nextFreeQuadtree = 0;
 
-	//GetQuadtree(0 /*depth*/, 0, 0, ScreenData.xres, ScreenData.yres); //implicitly: __nextFreeQuadtree = 1;
+	GetQuadtree(0 /*depth*/, 0, 0, ResolutionX_, ResolutionY_); //implicitly: __nextFreeQuadtree = 1;
 }
 
 /**
@@ -106,30 +103,32 @@ int GetQuadtreeIndex(AABB* rect, Quadtree* quad)
 /**
  * Insert the object into the quadtree. If the node exceeds the capacity, it will split and add all objects to their corresponding nodes.
  */
- void InsertCollider(Entity* ent, Quadtree* quad)
+ void InsertCollider(void* ent, AABB* rect, Quadtree* quad)
  {
 	int i;
 	int index;
 	int objects;
-	Entity** spot;
+	Info* spot;
 
 	objects = quad->objects;
 
 	if (quad->submatrix[0] != NULL) // either all quadtrees in submatrix are null or none are, hence why split creates 4 subtrees
 	{
-		index = GetQuadtreeIndex(&ent->rect, quad); // first try putting the object in the submatrix
+		index = GetQuadtreeIndex(rect, quad); // first try putting the object in the submatrix
 		if (index != -1)
 		{
-			InsertCollider(ent, quad->submatrix[index]);
+			InsertCollider(ent, rect, quad->submatrix[index]);
 			return;
 		}
 	}
 	
-	if(objects >= 21) CRASH("FATAL ERROR: Too many objects in one quadtree");
+	if(objects >= __listMax) CRASH("FATAL ERROR: Too many objects in one quadtree");
 
 	spot = &quad->list[0]; //pointer to the first entity pointer
-	while(*spot != NULL) spot++; //check the next item in the list. Equivalent to (quad->list[0])-->(quad->list[1]), (quad->list[1])-->(quad->list[2])
-	*spot = ent;
+	while(spot != NULL) spot++; //check the next item in the list. Equivalent to (quad->list[0])-->(quad->list[1]), (quad->list[1])-->(quad->list[2])
+	
+	spot->ent = ent;
+	spot->rect = rect;
 	quad->objects++;
 	
 	if (objects > __targetSize && quad->depth < __maxDepth)
@@ -138,15 +137,15 @@ int GetQuadtreeIndex(AABB* rect, Quadtree* quad)
 		{
 			SplitQuadtree(quad);
 			
-			for(i = 0; i < 21; i++) //these options opened up so consider reallocation for each
+			for(i = 0; i < __listMax; i++) //these options opened up so consider reallocation for each
 			{
-				if(!quad->list[i]) continue;
+				if(!quad->list[i].ent) continue;
 
-				index = GetQuadtreeIndex(&quad->list[i]->rect,quad); 
+				index = GetQuadtreeIndex(quad->list[i].rect,quad); 
 				if (index != -1)
 				{
-					InsertCollider(quad->list[i], quad->submatrix[index]); //move the collider into the lower levels
-					quad->list[i] = NULL; // remove previous entity that has moved down a level
+					InsertCollider(quad->list[i].ent, quad->list[i].rect, quad->submatrix[index]); //move the collider into the lower levels
+					quad->list[i].ent = NULL; // remove previous entity that has moved down a level
 					quad->objects--;
 				}
 			}
@@ -155,18 +154,26 @@ int GetQuadtreeIndex(AABB* rect, Quadtree* quad)
 }
 
 /**
+ *  Overloaded method to insert a collider into the Quadtree
+ */
+void InsertCollider(void* ent, AABB* rect)
+{
+	InsertCollider(ent, rect, &__quadtrees[0]); //begin the search from the top!
+}
+
+/**
  * Return all objects that could potentially collide with the given object
  */
-void RetrieveCollisions(AABB* rect, Quadtree* quad, Entity* (*out)[__maxCollisions], /*a pointer to an array populated by (initially) NULL Entity pointers*/
+void RetrieveCollisions(AABB* rect, Quadtree* quad, void* (*out)[], /*a pointer to an array populated by (initially) NULL Entity pointers*/
 						int cursor) /*starts at zero, moves forward as Entity pointers are added to the array of "ents"*/
 {
 	int i;
 	int index;
-	Entity* temp;
+	void* temp;
 
-	for(i = 0; i < 21; i++) 
+	for(i = 0; i < __listMax; i++) 
 	{
-		temp = quad->list[i];
+		temp = &quad->list[i].ent;
 		if(temp)
 		{
 			(*out)[cursor] = temp;
@@ -183,39 +190,7 @@ void RetrieveCollisions(AABB* rect, Quadtree* quad, Entity* (*out)[__maxCollisio
 /**
  *  Overloaded retrieve collision function that hides the implementation of the previous, more complicated function.
  */
-int RetrieveCollisions(Entity* ent, Entity* (*out)[__maxCollisions])
+void RetrieveCollisions(AABB* rect, void* (*out)[])
 {
-	int i, emptyIndex, filledIndex;
-
-	RetrieveCollisions(&ent->rect, &__quadtrees[0], out, 0);
-
-	for(i = 0; i < __maxCollisions; i++)
-	{
-		if(ent == (*out)[i])								(*out)[i] = NULL; //remove the entity's "self" from the list
-		else if(!BoxOnBox(&ent->rect, &(*out)[i]->rect))	(*out)[i] = NULL; //do not return objects that don't collide
-	}
-
-	/*XXX: ERROR PRONE, should I keep this*/
-	//rearrange everything for convenient usage
-	for(emptyIndex = 0; emptyIndex < __maxCollisions; emptyIndex++)
-	{
-		while((*out)[emptyIndex] != NULL) //continue til you find something empty
-		{
-			emptyIndex++;
-			if(emptyIndex >= __maxCollisions) goto end;
-		} //at this point you found the first empty object remaining
-
-		filledIndex = emptyIndex + 1; //make sure we don't swap "backwards"
-		while((*out)[filledIndex] == NULL) //continue til you find something full
-		{
-			filledIndex++;
-			if(filledIndex >= __maxCollisions) goto end;
-		} //at this point you found the first filled object after the first empty object.
-
-		(*out)[emptyIndex] = (*out)[filledIndex]; //Put the filled object where the empty object is
-	}
-
-	end:
-	
-	return emptyIndex; //if empty index were 0, there would be 0 collisions
+	RetrieveCollisions(rect, &__quadtrees[0], out, 0);
 }
