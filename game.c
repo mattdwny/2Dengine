@@ -41,18 +41,19 @@ int main(int argc, char* argv[])
 
 	do
 	{
-		//Draw Events
+		//BEGIN Draw Events
 		ResetBuffer ();
 		DrawEntityList();
 		DrawMouse();
-		NextFrame();
 
 		Uint32 green = colorLerp(Red_, Blue_, 0.5f); //that's how that works, right?
+		mult_circle(screen, 200, 600, 32, green);
+ 
+		NextFrame();
+		//END Draw Events
 
-		fprintf(stderr, "%x\n", green);
 
-		//fill_circle(screen, 400, 400, 5, Red_);
-
+		//fprintf(stderr, "%x\n", green);
 		//Input and Action Events
 		SDL_PumpEvents();
 		ProcessInput();
@@ -94,13 +95,14 @@ void InitAll()
 void InitFighters()
 {
 	InitPlayer("images/hypersphere.png", 200, 600);
-	InitPlayer("images/hypersphere2.png", 800, 600, Magenta_);
+	InitPlayer("images/hypersphere2.png", 800, 600);
 }
 
 void InitPlayer(char* str, float x, float y)
 {
 	InitPlayer(str, x, y, -1);
 }
+
 void InitPlayer(char* str, float x, float y, int c)
 {
 	Fighter* fighter = (Fighter*) GetEntity(FIGHTER);

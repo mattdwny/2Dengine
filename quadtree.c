@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "game.h"
+#include "globals.h"
 #include "quadtree.h"
 
 #define __maxCollisions 16 /*the maximum number of collisions allowed by the game engine*/

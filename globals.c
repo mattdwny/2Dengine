@@ -1,10 +1,6 @@
-#ifndef GAME_H
-#define GAME_H
-
+#include <stdlib.h>
 #include <stdio.h>
-
-#define ResolutionX_ 1024
-#define ResolutionY_ 768
+#include "globals.h"
 
 //I learned my lesson!
 void CRASH(char* msg) //a simple implementation to make the code more concise. Turns four lines into one.
@@ -19,5 +15,3 @@ void CRASH(char* msg, char* err) //an overloaded method for SDL error printing
 	fprintf(stderr, err);
 	exit(-1);
 }
-
-#endif

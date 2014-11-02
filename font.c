@@ -2,6 +2,7 @@
 #include <string.h>
 #include "SDL_ttf.h"
 #include "graphics.h"
+#include "globals.h"
 
 #define __maxFonts 3
 
@@ -17,11 +18,7 @@ void LoadFont(char filename[40],int ptsize,int type);
 void LoadFonts()
 {
 	if(TTF_Init() == 0) atexit(TTF_Quit);
-	else
-	{
-		fprintf(stderr,"Couldn't initialize Font System: %s\n", SDL_GetError());
-		exit(1);
-	}
+	else				CRASH("Couldn't initialize Font System: ", SDL_GetError());
 
 	memset(__fonts,0,sizeof(TTF_Font*) * __maxFonts);
 	
@@ -33,11 +30,7 @@ void LoadFonts()
 void LoadFont(char filename[40],int ptsize,int type)
 {
 	__fonts[type] = TTF_OpenFont(filename,ptsize);
-	if(__fonts[type] == NULL)
-	{
-		fprintf(stderr,"Couldn't initialize Font: %s\n", SDL_GetError());
-		exit(1);
-	}
+	if(__fonts[type] == NULL) CRASH("Couldn't initialize Font: ", SDL_GetError());
 }
 
 void DrawTextCentered(char* text,SDL_Surface* surface, int sx, int sy, Uint32 color, int size, int font)

@@ -1,4 +1,5 @@
 #include "fighter.h"
+#include "globals.h"
 
 #define __maxFighters 2
 
@@ -38,11 +39,7 @@ void FighterDraw(void* data)
 
 	//fprintf(stderr, "Check: /%x/", fighter->sprite);
 
-	if(fighter == NULL)
-	{
-		fprintf(stderr, "Critical Error, nonexistant fighter");
-		return;
-	}
+	if(fighter == NULL) CRASH("Critical Error, nonexistant fighter");
 
 	if(fighter->sprite == NULL) return; //nothing to draw
 

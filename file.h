@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "globals.h"
+
 int getImagePathFromFile(char *filepath,char * filename);
 void addCoordinateToFile(char *filepath,int x, int y);
 int getCoordinatesFromFile(int *x, int *y,char * filename);
@@ -22,11 +24,8 @@ int getImagePathFromFile(char *filepath,char * filename)
         return -1;
     }
     fileptr = fopen(filename,"r");
-    if (!fileptr)
-    {
-        fprintf(stderr,"unable to open file: %s\n",filename);
-        return -1;
-    }
+    if (!fileptr) CRASH("unable to open file: \n",filename);
+
     if (fscanf_s(fileptr,"%s",buf))
     {
         if (strcmp(buf,"image:")==0)
@@ -48,11 +47,7 @@ void addCoordinateToFile(char *filepath,int x, int y)
         return;
     }
     fileptr = fopen(filepath,"a");
-    if (!fileptr)
-    {
-        fprintf(stderr,"unable to open file: %s\n",filepath);
-        return;
-    }
+    if (!fileptr) CRASH("unable to open file: \n",filename);
     fprintf(fileptr,"newcoordinate: %i %i\n",x,y);
     fclose(fileptr);
 }
@@ -74,11 +69,8 @@ int getCoordinatesFromFile(int *x, int *y,char * filename)
         return -1;
     }
     fileptr = fopen(filename,"r");
-    if (!fileptr)
-    {
-        fprintf(stderr,"unable to open file: %s\n",filename);
-        return -1;
-    }
+    if (!fileptr) CRASH("unable to open file: \n",filename);
+
     while (fscanf_s(fileptr,"%s",buf) != EOF)
     {
         fprintf(stdout,"buf is: %s\n",buf);

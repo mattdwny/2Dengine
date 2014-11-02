@@ -1,5 +1,6 @@
 #include "entity.h"
 #include "quadtree.h"
+#include "globals.h"
 
 #define __maxEntities 32
 #define __entityPermutation 3
@@ -125,7 +126,7 @@ void InitEntityList()
 	
 	if(__entityList == NULL)
 	{
-		fprintf(stderr,"initEntityList: FATAL: cannot allocate entity list\n");
+		CRASH("initEntityList: FATAL: cannot allocate entity list\n");
 		exit(-1);
 		return;
 	}

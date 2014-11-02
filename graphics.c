@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "globals.h"
 #include "graphics.h"
 
 #define __maxSprites    255
@@ -47,7 +48,7 @@ void InitGraphics()
     #endif
     if ( SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_DOUBLEBUF) < 0 )
     {
-        fprintf(stderr, "Unable to init SDL: %s\n", SDL_GetError());
+        CRASH("Unable to init SDL: ", SDL_GetError());
         exit(1);
     }
 	SDL_EnableUNICODE(1);
@@ -79,29 +80,18 @@ void InitGraphics()
 
     videobuffer = SDL_SetVideoMode(S_Data.xres, S_Data.yres,S_Data.depth, Vflags);
 
-    if ( videobuffer == NULL )
-    {
-        fprintf(stderr, "Unable to set 1024x768 video: %s\n", SDL_GetError());
-        exit(1);
-    }
+    if ( videobuffer == NULL ) CRASH("Unable to set 1024x768 video: %s\n", SDL_GetError());
 
     temp = SDL_CreateRGBSurface(SDL_HWSURFACE, S_Data.xres, S_Data.yres, S_Data.depth,rmask, gmask,bmask,amask);
 
-    if(temp == NULL)
-	{
-        fprintf(stderr,"Couldn't initialize background buffer: %s\n", SDL_GetError());
-        exit(1);
-	}
+    if(temp == NULL) CRASH("Couldn't initialize background buffer: ", SDL_GetError());
 
     // Just to make sure that the surface we create is compatible with the screen
     screen = SDL_DisplayFormat(temp);
     SDL_FreeSurface(temp);
     temp = SDL_CreateRGBSurface(Vflags, 2048, 768, S_Data.depth,rmask, gmask,bmask,amask);
-    if(temp == NULL)
-	{
-        fprintf(stderr,"Couldn't initialize Video buffer: %s\n", SDL_GetError());
-        exit(1);
-	}
+    
+	if(temp == NULL) CRASH("Couldn't initialize Video buffer: %s\n", SDL_GetError());
 
     buffer = SDL_DisplayFormat(temp);
     SDL_FreeSurface(temp);
@@ -180,11 +170,7 @@ Sprite* LoadSprite(char* filename, int sizex, int sizey, int frames, int c1, int
 	}
 
 	//makesure we have the room for a new sprite
-	if(NumSprites + 1 >= __maxSprites)
-	{
-		fprintf(stderr, "Maximum Sprites Reached.\n");
-		exit(1);
-	}
+	if(NumSprites + 1 >= __maxSprites) CRASH("Maximum Sprites Reached.\n");
 
 	//if its not already in memory, then load it.
 	NumSprites++;
@@ -195,11 +181,7 @@ Sprite* LoadSprite(char* filename, int sizex, int sizey, int frames, int c1, int
 
 	temp = IMG_Load(filename);
 
-	if(temp == NULL)
-	{
-		fprintf(stderr,"unable to load a vital sprite: %s\n",SDL_GetError());
-		exit(1);
-	}
+	if(temp == NULL) CRASH("unable to load a vital sprite: ",SDL_GetError());
 
 	__spriteList[i].image = SDL_DisplayFormatAlpha(temp); //FIXME: XXX
 	SDL_FreeSurface(temp);
@@ -387,7 +369,10 @@ Uint32 __GetPixel(SDL_Surface* surface, int x, int y)
  */
 void __PutPixel(SDL_Surface* surface, int x, int y, Uint32 pixel)
 {
-	if(x < 0 || x >= ResolutionX_ || y < 0 || y >= ResolutionY_){ fprintf(stderr,"%i, %i\n",x,y); return; } //draw circle isn't safe, so this is necessary.
+	if(x < 0 || x >= ResolutionX_ || y < 0 || y >= ResolutionY_) //draw circle isn't safe, so this is necessary.
+	{
+		return;
+	}
     //Here p is the address to the pixel we want to set
     Uint8 *p = (Uint8*) surface->pixels + y * surface->pitch + x * surface->format->BytesPerPixel;
 
@@ -767,11 +752,7 @@ void SwapSprite(SDL_Surface *sprite,int color1,int color2,int color3)
 	//First the precautions, that are tedious, but necessary
 	if(color1 == -1)return;
 	if(sprite == NULL)return;
-	if ( SDL_LockSurface(sprite) < 0 )
-	{
-		fprintf(stderr, "Can't lock screen: %s\n", SDL_GetError());
-		exit(1);
-	}
+	if ( SDL_LockSurface(sprite) < 0 ) CRASH("Can't lock screen: %s\n", SDL_GetError());
 
 	//now step through our sprite, pixel by pixel
 	for(y = 0;y < sprite->h ;y++)
@@ -830,7 +811,7 @@ void DrawMouse()
  * WARNING:  This function does not lock surfaces before altering, so
  * use SDL_LockSurface in any release situation.
  */
-void fill_circle(SDL_Surface *surface, int cx, int cy, int radius, Uint32 pixel)
+void draw_circle(SDL_Surface* surface, int cx, int cy, int radius, Uint32 pixel)
 {
     // Note that there is more to altering the bitrate of this 
     // method than just changing this value.  See how pixels are
@@ -839,7 +820,7 @@ void fill_circle(SDL_Surface *surface, int cx, int cy, int radius, Uint32 pixel)
     static const int BPP = 4;
  
     double r = (double)radius;
- 
+
     for (double dy = 1; dy <= r; dy += 1.0)
     {
         // This loop is unrolled a bit, only iterating through half of the
@@ -851,16 +832,75 @@ void fill_circle(SDL_Surface *surface, int cx, int cy, int radius, Uint32 pixel)
         // with a center and we need left/right coordinates.
  
         double dx = floor(sqrt((2.0 * r * dy) - (dy * dy)));
-        int x = cx - dx;
- 
+        int x = (int) (cx - dx);
+
         // Grab a pointer to the left-most pixel for each half of the circle
-        Uint8 *target_pixel_a = (Uint8 *)surface->pixels + ((int)(cy + r - dy)) * surface->pitch + x * BPP;
-        Uint8 *target_pixel_b = (Uint8 *)surface->pixels + ((int)(cy - r + dy)) * surface->pitch + x * BPP;
- 
+        Uint8 *target_pixel_a = (Uint8 *) surface->pixels + ((int)(cy + r - dy)) * surface->pitch + x * BPP;
+        Uint8 *target_pixel_b = (Uint8 *) surface->pixels + ((int)(cy - r + dy)) * surface->pitch + x * BPP;
+		
+		Uint8* minPtr = (Uint8*) surface->pixels;
+		Uint8* maxPtr = minPtr + ResolutionXY_ * BPP;
+
         for (; x <= cx + dx; x++)
         {
-            *(Uint32 *)target_pixel_a = pixel;
-            *(Uint32 *)target_pixel_b = pixel;
+			if(0 <= x && x < ResolutionX_)
+			{
+				if(minPtr <= target_pixel_a && target_pixel_a < maxPtr) //draw circle isn't safe, so this is necessary.
+				{
+					if(dy != r) *(Uint32 *)target_pixel_a = pixel;
+				}
+				if(minPtr <= target_pixel_b && target_pixel_b < maxPtr) //draw circle isn't safe, so this is necessary.
+				{
+					*(Uint32 *)target_pixel_b = pixel;
+				}
+			}
+            target_pixel_a += BPP;
+            target_pixel_b += BPP;
+        }
+    }
+}
+void mult_circle(SDL_Surface* surface, int cx, int cy, int radius, Uint32 pixel)
+{
+    // Note that there is more to altering the bitrate of this 
+    // method than just changing this value.  See how pixels are
+    // altered at the following web page for tips:
+    //   http://www.libsdl.org/intro.en/usingvideo.html
+    static const int BPP = 4; //the size of a RGBA truecolor value in bytes
+    double r = (double)radius;
+
+    for (double dy = 1; dy <= r; dy += 1.0)
+    {
+        // This loop is unrolled a bit, only iterating through half of the
+        // height of the circle.  The result is used to draw a scan line and
+        // its mirror image below it.
+ 
+        // The following formula has been simplified from our original.  We
+        // are using half of the width of the circle because we are provided
+        // with a center and we need left/right coordinates.
+ 
+        double dx = floor(sqrt((2.0 * r * dy) - (dy * dy)));
+        int x = (int) (cx - dx);
+ 
+        // Grab a pointer to the left-most pixel for each half of the circle
+        Uint8* target_pixel_a = (Uint8 *) surface->pixels + ((int)(cy + r - dy)) * surface->pitch + x * BPP;
+        Uint8* target_pixel_b = (Uint8 *) surface->pixels + ((int)(cy - r + dy)) * surface->pitch + x * BPP;
+		
+		Uint8* minPtr = (Uint8*) surface->pixels;
+		Uint8* maxPtr = minPtr + ResolutionXY_ * BPP;
+
+        for (; x <= cx + dx; x++)
+        {
+			if(0 <= x && x < ResolutionX_)
+			{
+				if(minPtr <= target_pixel_a && target_pixel_a < maxPtr) //draw circle isn't safe, so this is necessary.
+				{
+					if(dy != r) *(Uint32 *)target_pixel_a = colorLerp(pixel,*(Uint32 *)target_pixel_a,.5);
+				}
+				if(minPtr <= target_pixel_b && target_pixel_b < maxPtr) //draw circle isn't safe, so this is necessary.
+				{
+					*(Uint32 *)target_pixel_b = colorLerp(pixel,*(Uint32 *)target_pixel_b,.5);
+				}
+			}
             target_pixel_a += BPP;
             target_pixel_b += BPP;
         }
@@ -875,24 +915,34 @@ Uint32 colorLerp(Uint32 color1, Uint32 color2, float t) //shouldn't be a bottlen
 	Uint8 result[4];
 	Uint32 result32;
 
+	//Red
 	rgba1[0] = (color1 >> 16); //memory format is ARGB, hence red is 0xFF0000 and blue is 0x0000FF where "A" is omitted
 	rgba2[0] = (color2 >> 16);
 
+	//Green
 	rgba1[1] = (color1 >> 8);
 	rgba2[1] = (color2 >> 8);
 
+	//Blue
 	rgba1[2] = (color1 >> 0);
 	rgba2[2] = (color2 >> 0);
 
+	//Alpha
 	rgba1[3] = (color1 >> 24);
 	rgba2[3] = (color2 >> 24);
 
 	for(i = 0; i < 4; ++i)
 	{
-		result[i] = (Uint8) ((float) rgba1[i]) * t + ( ((float) rgba2[i]) * ( 1.0f - t ) );
+		result[i] = (Uint8) ( ( t * rgba1[i] ) + ( 1.0f - t) * rgba2[i] );
 	}
 
-	result32 = (result[0] << 16) & (result[1] << 8) & (result[2] << 0) & (result[3] << 24);
+	/*printf("(%i, %i, %i, %i) + (%i, %i, %i, %i) -> (%i, %i, %i, %i)\n", rgba1 [0],rgba1 [1],rgba1 [2],rgba1 [3],
+																		  rgba2 [0],rgba2 [1],rgba2 [2],rgba2 [3],
+																		  result[0],result[1],result[2],result[3]);*/
+
+	result32 = ( ((Uint32) result[0]) << 16) + ( ((Uint32) result[1]) << 8) + ( ((Uint32) result[2]) << 0) + ( ((Uint32) result[3]) << 24);
+
+	//printf("%x",result32);
 
 	return result32;
 }
