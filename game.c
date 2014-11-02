@@ -57,10 +57,9 @@ int main(int argc, char* argv[])
 		//Input and Action Events
 		SDL_PumpEvents();
 		ProcessInput();
-		//ThinkEntityList();
-		//PopulateQuadtrees();
-		//UpdateEntityList();
-		//printf("This should print\n");
+		ThinkEntityList();
+		PopulateQuadtrees();
+		UpdateEntityList();
 
 	} while(!quit);
 

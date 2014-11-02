@@ -125,8 +125,8 @@ int GetQuadtreeIndex(AABB* rect, Quadtree* quad)
 	if(objects >= __listMax) CRASH("FATAL ERROR: Too many objects in one quadtree");
 
 	spot = &quad->list[0]; //pointer to the first entity pointer
-	while(spot != NULL) spot++; //check the next item in the list. Equivalent to (quad->list[0])-->(quad->list[1]), (quad->list[1])-->(quad->list[2])
-	
+	while(spot->ent != NULL) spot++; //check the next item in the list. Equivalent to (quad->list[0])-->(quad->list[1]), (quad->list[1])-->(quad->list[2])
+
 	spot->ent = ent;
 	spot->rect = rect;
 	quad->objects++;
