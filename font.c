@@ -3,12 +3,9 @@
 #include "SDL_ttf.h"
 #include "graphics.h"
 #include "globals.h"
+#include "font.h"
 
 #define __maxFonts 3
-
-#define F_Small 0
-#define F_Medium 1
-#define F_Large 2
 
 extern SDL_Surface* screen;
 TTF_Font* __fonts[__maxFonts];
@@ -49,7 +46,7 @@ void DrawTextCentered(char* text,SDL_Surface* surface, int sx, int sy, Uint32 co
 	temp1 = TTF_RenderText_Shaded(__fonts[font], text, colortype, bgcolor);
 	
 	fontpic = SDL_DisplayFormat(temp1);
-	SDL_FreeSurface(temp1);
+	SDL_FreeSurface(temp1); //TODO: cache this shit.
 	dst.x = sx - (fontpic->w / 1);
 	dst.y = sy;
 	SDL_SetColorKey(fontpic, SDL_SRCCOLORKEY , SDL_MapRGBA(screen->format, bgcolor.r,bgcolor.g,bgcolor.b,bgcolor.unused));

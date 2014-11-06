@@ -9,6 +9,7 @@ void __funcPtrInit();
 
 Entity* __entityList = NULL;
 Entity* __firstFree = NULL;
+extern int frameslow;
 
 void  (*draw    [__entityPermutation])(void* data); //an array of function pointers to draw functions that take void pointers to the data union type
 void  (*destroy [__entityPermutation])(void* data);
@@ -50,7 +51,7 @@ void CloseEntityList()
 void DrawEntityList()
 {	
 	int i;
-
+	frameslow++;
 	for(i = 0; i < __maxEntities;i++)
 	{
 		if(__entityList[i].used)

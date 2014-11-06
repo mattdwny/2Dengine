@@ -15,3 +15,18 @@ void CRASH(char* msg, char* err) //an overloaded method for SDL error printing
 	fprintf(stderr, err);
 	exit(-1);
 }
+
+void WARNING(char* msg)
+{
+	fprintf(stdout, msg);
+}
+
+void LOG(char* msg)
+{
+	fprintf(stdout, msg);
+}
+
+void WRITE(FILE* fileptr, char* info, ...)
+{
+	fprintf(fileptr,info);
+}

@@ -24,13 +24,6 @@ typedef struct HealthBar_S
 	float radius;
 } HealthBar;
 
-typedef struct Controller_S
-{
-	Sprite* sprite;
-	float health;
-	SDL_Rect BBox;
-} Controller;
-
 typedef struct 
 {
 	Sprite* sprite;
@@ -47,7 +40,6 @@ typedef union Data_S
 	Fighter fighter;
 	Projectile projectile;
 	HealthBar healthBar;
-	Controller controller;
 } Data;
 
 typedef struct Entity_S

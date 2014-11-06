@@ -1,17 +1,19 @@
 #include "SDL.h"
+//#include "game.h"
 #include "controller.h"
 
 #define MIN(A,B) (A < B ? A : B)
 
-int   axes[4];
-Uint8 buttons[5];
+Controller controllers[4]; //hardcoding, BLEH
+
 const Uint8* keyboard;
 
+void HandleKeysDown(SDLKey k);
+void HandleKeysUp(SDLKey k);
 
-
-/*void InitController()
+void InitControllers()
 {
-	int i;
+	/*int i;
 	int numJoysticks;
 	
 	SDL_Init(SDL_INIT_JOYSTICK);
@@ -33,8 +35,8 @@ const Uint8* keyboard;
 
 			SDL_JoystickClose(js);
 		}
-	}
-}*/
+	}*/
+}
 
 void ProcessInput()
 {
@@ -47,14 +49,103 @@ void ProcessInput()
 		switch( event.type )
 		{
 			case SDL_KEYDOWN:
-				if(event.key.keysym.sym == SDLK_ESCAPE) exit(-1);
+				HandleKeysDown(event.key.keysym.sym);
 				break;
 			case SDL_KEYUP:
-				
+				HandleKeysUp(event.key.keysym.sym);
 				break;
 
 			default:
 				break;
 		}
+	}
+}
+
+void HandleKeysDown(SDLKey k)
+{
+	switch(k)
+	{
+		//controllers[0] movement
+		case SDLK_ESCAPE:
+			exit(-1);
+			break;
+
+		case SDLK_w:
+			controllers[0].axes[AXIS_MOVE_V] = -1;
+			break;
+
+		case SDLK_a:
+			controllers[0].axes[AXIS_MOVE_H] = -1;
+			printf("Yo, BR-R-R-O, you pressed the A key, bro.\n");
+			break;
+
+		case SDLK_s:
+			controllers[0].axes[AXIS_MOVE_V] =  1;
+			break;
+
+		case SDLK_d:
+			controllers[0].axes[AXIS_MOVE_H] =  1;
+			break;
+
+		//controllers[1] movement
+		case SDLK_UP:
+			controllers[1].axes[AXIS_MOVE_V] = -1;
+			break;
+
+		case SDLK_LEFT:
+			controllers[1].axes[AXIS_MOVE_H] = -1;
+			break;
+
+		case SDLK_DOWN:
+			controllers[1].axes[AXIS_MOVE_V] =  1;
+			break;
+
+		case SDLK_RIGHT:
+			controllers[1].axes[AXIS_MOVE_H] =  1;
+			break;
+	}
+}
+void HandleKeysUp(SDLKey k)
+{
+	switch(k)
+	{
+		//controllers[0] movement
+		case SDLK_ESCAPE:
+			//CRASH("DAFUQ");
+			break;
+
+		case SDLK_w:
+			controllers[0].axes[AXIS_MOVE_V] = 0;
+			break;
+
+		case SDLK_a:
+			controllers[0].axes[AXIS_MOVE_H] = 0;
+			printf("Yo, BR-R-R-O, you released the A key, bro.\n");
+			break;
+
+		case SDLK_s:
+			controllers[0].axes[AXIS_MOVE_V] = 0;
+			break;
+
+		case SDLK_d:
+			controllers[0].axes[AXIS_MOVE_H] = 0;
+			break;
+
+		//controllers[1] movement
+		case SDLK_UP:
+			controllers[1].axes[AXIS_MOVE_V] = 0;
+			break;
+
+		case SDLK_LEFT:
+			controllers[1].axes[AXIS_MOVE_H] = 0;
+			break;
+
+		case SDLK_DOWN:
+			controllers[1].axes[AXIS_MOVE_V] = 0;
+			break;
+
+		case SDLK_RIGHT:
+			controllers[1].axes[AXIS_MOVE_H] = 0;
+			break;
 	}
 }

@@ -4,13 +4,14 @@
 #include "graphics.h"
 #include "vector2.h"
 #include "AABB.h"
+#include "controller.h"
 
-typedef enum { STAND = 0, CROUCH, MOVE, FALL, FASTFALL, ROLL, SPOT_DODGE, AIR_DODGE, TUMBLE, GROUND_STUN, AIR_STUN, TECH, BLOCK, GRAB, AIR_GRAB, GRABBED } FighterState;
+typedef enum { STAND = 0, CROUCH, MOVE, FALL, FASTFALL, ROLL, SPOT_DODGE, AIR_DODGE, TUMBLE, GROUND_STUN, AIR_STUN, FLOOR_TECH, CEIL_TECH, LWALL_TECH, RWALL_TECH, BLOCK, GRAB, AIR_GRAB, GRABBED } FighterState;
 
 typedef struct Fighter_S
 {
 	FighterState fightState;
-
+	Controller* controller;
 	Sprite* sprite;
 	int frame;
 	vec2d pos;
@@ -18,6 +19,12 @@ typedef struct Fighter_S
 	AABB BBox;
 	float radius;
 	int maxJumps;
+	int curJumps;
+	float jumpSpeed;
+	float runSpeed;
+	float gravity;
+	float fallSpeed;
+	float fastFallSpeed;
 } Fighter;
 
 void* FighterInit(void* data);

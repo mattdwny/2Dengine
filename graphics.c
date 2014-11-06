@@ -100,7 +100,6 @@ void InitGraphics()
     Camera.w = screen->w; //we want to make sure that our camera is the same size of the video screen
     Camera.h = screen->h;
     SDL_ShowCursor(SDL_DISABLE);//don't show the mouse
-    SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY,SDL_DEFAULT_REPEAT_INTERVAL); //TODO: move
 }
 
 /**
@@ -119,10 +118,12 @@ void NextFrame()
 	Uint32 Then;
 	SDL_BlitSurface(screen,NULL,videobuffer,NULL);/*copy everything we did to the video surface*/
 	SDL_Flip(videobuffer);							/*and then update the screen*/
-	Then = NOW;									/*these next few lines  are used to show how long each frame takes to update.  */
+	
+	/*Then = NOW;									//these next few lines  are used to show how long each frame takes to update.
 	NOW = SDL_GetTicks();
-	//fprintf(stdout,"Ticks passed this frame: %i\n", NOW - Then);
-	FrameDelay(10); /*this will make the frame rate about 100 frames per second.*/
+	printf("Time: %d\n", NOW-Then);*/
+
+	FrameDelay(10); /*this will make the frame rate about 100 frames per second. Or twice the EU standard*/
 }
 
 /**
