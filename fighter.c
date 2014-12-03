@@ -4,6 +4,11 @@
 
 #define __maxFighters 2
 
+//Hyper Sphere Fighter 4
+
+#define sign(x) ((x > 0) - (x < 0)) //I can code
+#define sqr(x) ((x)*(x))
+
 extern SDL_Surface* screen;
 extern Controller controllers[4];
 
@@ -15,6 +20,7 @@ int frameslow = 0;
 void ApplyHalfGravity(Fighter* fighter);
 void MovePlayer(Fighter* fighter);
 void Clamp(Fighter* fighter);
+void SpriteFrameHandler(Fighter* fighter);
 
 void* FighterInit(void* data)
 {
@@ -33,6 +39,9 @@ void* FighterInit(void* data)
 	fighter->fastFallSpeed = 1000;
 	fighter->jumpSpeed = -550;
 	fighter->runSpeed = 512;
+	fighter->stopSpeed = 10;
+	fighter->friction = 250;
+	fighter->runAccel = 900;
 
 	//...
 
@@ -56,24 +65,28 @@ void FighterDraw(void* data)
 
 	fighter = (Fighter*) data;
 
-	//fprintf(stderr, "Check: /%x/", fighter->sprite);
-
 	if(fighter == NULL) CRASH("Critical Error, nonexistant fighter");
 
 	if(fighter->sprite == NULL) return; //nothing to draw
 
-	DrawSprite(fighter->sprite, (int) fighter->pos[0] - 32, (int) fighter->pos[1] - 32, fighter->frame); //draw the player so he is centered, hence -32
+	DrawSprite(fighter->sprite, (int) fighter->pos[0] - 32, (int) fighter->pos[1] - 32, (int) floor(fighter->frame)); //draw the player so he is centered, hence -32
 
-	if(fighter->fightState == FALL) mult_circle(screen, (int) fighter->pos[0], (int) fighter->pos[1], 32, Black_);
+	if(fighter->fightState == BLOCK) mult_circle(screen, (int) fighter->pos[0], (int) fighter->pos[1], 32, Black_);
+
+	//fighter->frame += CROSS(
+
+	SpriteFrameHandler(fighter);
+
+	//printf("The frame number is %f\n", fighter->frame);
 
 	switch(fighter->fightState)
 	{
 		case ROLL: case SPOT_DODGE: case AIR_DODGE: case FLOOR_TECH: case CEIL_TECH: case LWALL_TECH: case RWALL_TECH:
-			fighter->frame = (fighter->frame + 1) % fighter->sprite->frames;
+			//fighter->frame = (fighter->frame + 1) % fighter->sprite->frames;
 			break;
 
 		default:
-			if(frameslow % 4 == 0) fighter->frame = (fighter->frame + 1) % fighter->sprite->frames;
+			//if(frameslow % 4 == 0) fighter->frame = (fighter->frame + 1) % fighter->sprite->frames;
 			break;
 	}
 }
@@ -106,7 +119,7 @@ void FighterThink(void* data)
 		case BLOCK:
 			printf("blocking\n");
 			//to grab
-			//to stand
+			if(!controls->buttons[BUTTON_GUARD]) fighter->fightState = STAND;
 			//to roll
 			break;
 		case ROLL:
@@ -185,7 +198,6 @@ void FighterThink(void* data)
 
 	MovePlayer(fighter);
 
-	//printf("%f\n",fighter->vel[1]);
 	ApplyHalfGravity(fighter); //check it: http://www.niksula.hut.fi/~hkankaan/Homepages/gravity.html
 	fighter->pos[AXIS_MOVE_H] += fighter->vel[AXIS_MOVE_H] * deltaTime;
 	fighter->pos[AXIS_MOVE_V] += fighter->vel[AXIS_MOVE_V] * deltaTime;
@@ -224,19 +236,25 @@ void ApplyHalfGravity(Fighter* fighter)
 
 void MovePlayer(Fighter* fighter)
 {
-	printf("happening");
 	Controller* controls = fighter->controller;
 
 	switch(fighter->fightState)
 	{
-		case MOVE: case FALL: case FASTFALL:
-			if(controls->axes[AXIS_MOVE_H] != 0) fighter->vel[AXIS_MOVE_H] += controls->axes[AXIS_MOVE_H] * deltaTime * 700;
-			//else								 fighter->vel[AXIS_MOVE_H] -= sign(
-			printf("vel[AXIS_MOVE_H]: %f\n", fighter->vel[AXIS_MOVE_H]);
-			printf("controls->axes[AXIS_MOVE_H]: %f\n", controls->axes[AXIS_MOVE_H]);
-			
-			if     (fighter->vel[AXIS_MOVE_H] >  fighter->runSpeed) fighter->vel[AXIS_MOVE_H] =  fighter->runSpeed;
-			else if(fighter->vel[AXIS_MOVE_H] < -fighter->runSpeed) fighter->vel[AXIS_MOVE_H] = -fighter->runSpeed;
+		case MOVE: 
+			fighter->vel[0] -= sign(fighter->vel[0]) * fighter->friction * deltaTime; //apply friction when grounded
+			if(controls->axes[0] == 0) fighter->vel[0] -= sign(fighter->vel[0]) * fighter->runAccel * deltaTime; //apply runAccel friction with no input
+			//break intentionally omitted
+
+		case FALL: case FASTFALL:
+			if(controls->axes[0] != 0) fighter->vel[0] += controls->axes[0] * fighter->runAccel * deltaTime; //apply player movement on MOVE, FALL, FASTFALL
+
+			if     (fighter->vel[0] >  fighter->runSpeed) fighter->vel[0] =  fighter->runSpeed;
+			else if(fighter->vel[0] < -fighter->runSpeed) fighter->vel[0] = -fighter->runSpeed;
+			else if(abs(fighter->vel[0]) < fighter->stopSpeed && controls->axes[0] == 0 && fighter->fightState == MOVE)
+			{
+				fighter->vel[0] = 0;
+				fighter->fightState = STAND;
+			}
 			break;
 		case TUMBLE:
 			break;
@@ -249,6 +267,23 @@ void MovePlayer(Fighter* fighter)
 		case RWALL_TECH:
 			break;
 	}
+}
+
+void SpriteFrameHandler(Fighter* fighter)
+{
+	static vec2d center = { ResolutionX_*0.5, ResolutionY_*0.5 };
+	vec2d toCenter;
+	float cross;
+
+	toCenter[0] = center[0] - fighter->pos[0]; //find the direction of the player relative to the center
+	toCenter[1] = center[1] - fighter->pos[1];
+
+	cross = toCenter[1]*fighter->vel[0] - toCenter[0]*fighter->vel[1];
+	cross /= 100000;
+
+	fighter->frame += cross;
+	while(fighter->frame >= fighter->sprite->frames) fighter->frame -= fighter->sprite->frames; //clamp and float modulo frames into a valid range. If statements might be sufficient in the future.
+	while(fighter->frame < 0)						 fighter->frame += fighter->sprite->frames;
 }
 
 void Clamp(Fighter* fighter)
@@ -264,15 +299,15 @@ void Clamp(Fighter* fighter)
 	{
 		fighter->pos[0] = 32;
 		fighter->vel[0] = 0;
-		if(fighter->pos[0] != ResolutionY_ - 32) fighter->fightState = FALL;
-		else									 fighter->fightState = STAND;
+		if(fighter->pos[1] < ResolutionY_ - 32) fighter->fightState = FALL;
+		else									fighter->fightState = STAND;
 	}
 	if(fighter->pos[0] > ResolutionX_ - 32)
 	{
 		fighter->pos[0] = ResolutionX_ - 32;
 		fighter->vel[0] = 0;
 		fighter->fightState = STAND;
-		if(fighter->pos[0] != ResolutionY_ - 32) fighter->fightState = FALL;
-		else									 fighter->fightState = STAND;
+		if(fighter->pos[1] < ResolutionY_ - 32) fighter->fightState = FALL;
+		else									fighter->fightState = STAND;
 	}
 }

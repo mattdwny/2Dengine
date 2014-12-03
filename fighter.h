@@ -13,7 +13,7 @@ typedef struct Fighter_S
 	FighterState fightState;
 	Controller* controller;
 	Sprite* sprite;
-	int frame;
+	float frame;
 	vec2d pos;
 	vec2d vel;
 	AABB BBox;
@@ -22,6 +22,9 @@ typedef struct Fighter_S
 	int curJumps;
 	float jumpSpeed;
 	float runSpeed;
+	float stopSpeed;
+	float runAccel;
+	float friction;
 	float gravity;
 	float fallSpeed;
 	float fastFallSpeed;

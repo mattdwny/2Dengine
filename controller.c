@@ -65,87 +65,125 @@ void HandleKeysDown(SDLKey k)
 {
 	switch(k)
 	{
-		//controllers[0] movement
 		case SDLK_ESCAPE:
 			exit(-1);
 			break;
 
+
+
+
+		//controllers[0] movement
 		case SDLK_w:
-			controllers[0].axes[AXIS_MOVE_V] = -1;
+			ProcessAxis(&controllers[0], AXIS_MOVE_V, VUP, 1);
 			break;
 
 		case SDLK_a:
-			controllers[0].axes[AXIS_MOVE_H] = -1;
-			printf("Yo, BR-R-R-O, you pressed the A key, bro.\n");
+			ProcessAxis(&controllers[0], AXIS_MOVE_H, HLEFT, 1);
 			break;
 
 		case SDLK_s:
-			controllers[0].axes[AXIS_MOVE_V] =  1;
+			ProcessAxis(&controllers[0], AXIS_MOVE_V, VDOWN, 1);
 			break;
 
 		case SDLK_d:
-			controllers[0].axes[AXIS_MOVE_H] =  1;
+			ProcessAxis(&controllers[0], AXIS_MOVE_H, HRIGHT, 1);
 			break;
+
+		case SDLK_LSHIFT:
+			controllers[0].buttons[BUTTON_GUARD] = 1;
+			break;
+
+
+
+
+
 
 		//controllers[1] movement
 		case SDLK_UP:
-			controllers[1].axes[AXIS_MOVE_V] = -1;
+			ProcessAxis(&controllers[1], AXIS_MOVE_V, VUP, 1);
 			break;
 
 		case SDLK_LEFT:
-			controllers[1].axes[AXIS_MOVE_H] = -1;
+			ProcessAxis(&controllers[1], AXIS_MOVE_H, HLEFT, 1);
 			break;
 
 		case SDLK_DOWN:
-			controllers[1].axes[AXIS_MOVE_V] =  1;
+			ProcessAxis(&controllers[1], AXIS_MOVE_V, VDOWN, 1);
 			break;
 
 		case SDLK_RIGHT:
-			controllers[1].axes[AXIS_MOVE_H] =  1;
+			ProcessAxis(&controllers[1], AXIS_MOVE_H, HRIGHT, 1);
 			break;
+
+		case SDLK_RSHIFT:
+			controllers[1].buttons[BUTTON_GUARD] = 1;
+			break;
+
 	}
 }
 void HandleKeysUp(SDLKey k)
 {
 	switch(k)
 	{
-		//controllers[0] movement
 		case SDLK_ESCAPE:
 			//CRASH("DAFUQ");
 			break;
 
+
+
+		//controllers[0] movement
 		case SDLK_w:
-			controllers[0].axes[AXIS_MOVE_V] = 0;
+			ProcessAxis(&controllers[0], AXIS_MOVE_V, VUP, 0);
 			break;
 
 		case SDLK_a:
-			controllers[0].axes[AXIS_MOVE_H] = 0;
-			printf("Yo, BR-R-R-O, you released the A key, bro.\n");
+			ProcessAxis(&controllers[0], AXIS_MOVE_H, HLEFT, 0);
 			break;
 
 		case SDLK_s:
-			controllers[0].axes[AXIS_MOVE_V] = 0;
+			ProcessAxis(&controllers[0], AXIS_MOVE_V, VDOWN, 0);
 			break;
 
 		case SDLK_d:
-			controllers[0].axes[AXIS_MOVE_H] = 0;
+			ProcessAxis(&controllers[0], AXIS_MOVE_H, HRIGHT, 0);
 			break;
+
+		case SDLK_LSHIFT:
+			controllers[0].buttons[BUTTON_GUARD] = 0;
+			break;
+
+
+
+
 
 		//controllers[1] movement
 		case SDLK_UP:
-			controllers[1].axes[AXIS_MOVE_V] = 0;
+			ProcessAxis(&controllers[1], AXIS_MOVE_V, VUP, 0);
 			break;
 
 		case SDLK_LEFT:
-			controllers[1].axes[AXIS_MOVE_H] = 0;
+			ProcessAxis(&controllers[1], AXIS_MOVE_H, HLEFT, 0);
 			break;
 
 		case SDLK_DOWN:
-			controllers[1].axes[AXIS_MOVE_V] = 0;
+			ProcessAxis(&controllers[1], AXIS_MOVE_V, VDOWN, 0);
 			break;
 
 		case SDLK_RIGHT:
-			controllers[1].axes[AXIS_MOVE_H] = 0;
+			ProcessAxis(&controllers[1], AXIS_MOVE_H, HRIGHT, 0);
+			break;
+
+		case SDLK_RSHIFT:
+			controllers[1].buttons[BUTTON_GUARD] = 0;
 			break;
 	}
+}
+
+
+void ProcessAxis(Controller_S* controller, Axes_E axis, int dir, int press)
+{
+	controller->__axes[axis][dir] = press;
+	if (press)								 controller->axes[axis] = (dir ?  1 : -1); //I couldn't think of an elegant way to write this, but it does input "snap" similarly to Unity Engine
+	else if (controller->__axes[axis][!dir]) controller->axes[axis] = (dir ? -1 :  1);
+	else									 controller->axes[axis] = 0;
 }

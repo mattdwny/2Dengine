@@ -45,7 +45,7 @@ int main(int argc, char** argv)
 
 	if(bg != NULL) SDL_BlitSurface(bg, NULL, buffer, NULL);
 
-	CountDown(" ", Red_);
+	/*CountDown(" ", Red_);
 	CountDown(" ", Red_);
 	CountDown(" ", Red_);
 	PlaySound(THREE_);
@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 	CountDown("2", Orange_);
 	PlaySound(ONE_);
 	CountDown("1", Yellow_);
-	PlaySound(GO_);
+	PlaySound(GO_);*/
 
 	PlayMusic(BATTLEFIELD);
 	//PlayMusic(FINALDESTINATION);
