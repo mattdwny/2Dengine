@@ -17,8 +17,9 @@ typedef struct Controller_S
 	void (*control)(Controller_S*, Axes_E, int, int);
 } Controller;
 
-void InitControllers();
+void OpenControllers(int map);
 void ProcessInput();
-void ProcessAxis(Controller_S* controller, Axes_E axis, int dir,  int press);
+int  InputThread(void* data);
+void ProcessAxis(Controller_S* controller, Axes_E axis, int dir, int press);
 
 #endif

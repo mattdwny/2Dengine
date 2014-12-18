@@ -99,8 +99,6 @@ Uint32 IndexColor(int color);
 void FrameDelay(Uint32 delay);
 void ResetBuffer();
 void NextFrame();
-void InitMouse();
-void DrawMouse();
 void draw_circle(SDL_Surface* surface, int n_cx, int n_cy, int radius, Uint32 pixel);
 void mult_circle(SDL_Surface* surface, int n_cx, int n_cy, int radius, Uint32 pixel);
 Uint32 colorLerp(Uint32 color1, Uint32 color2, float t);

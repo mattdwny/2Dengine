@@ -8,11 +8,17 @@ Controller controllers[4]; //hardcoding, BLEH
 
 const Uint8* keyboard;
 
-void HandleKeysDown(SDLKey k);
-void HandleKeysUp(SDLKey k);
+int bitmap;
 
-void InitControllers()
+void HandleKeysDown0(SDLKey k);
+void HandleKeysDown1(SDLKey k);
+void HandleKeysUp0(SDLKey k);
+void HandleKeysUp1(SDLKey k);
+
+void OpenControllers(int map)
 {
+	SDL_InitSubSystem(SDL_INIT_VIDEO);
+	bitmap = map;
 	/*int i;
 	int numJoysticks;
 	
@@ -38,6 +44,16 @@ void InitControllers()
 	}*/
 }
 
+int InputThread(void* data)
+{
+	while(1)
+	{
+		SDL_Delay(1);
+
+		ProcessInput();
+	}
+}
+
 void ProcessInput()
 {
 	SDL_PumpEvents();
@@ -49,10 +65,12 @@ void ProcessInput()
 		switch( event.type )
 		{
 			case SDL_KEYDOWN:
-				HandleKeysDown(event.key.keysym.sym);
+				if(bitmap & (1 << 0)) HandleKeysDown0(event.key.keysym.sym);
+				if(bitmap & (1 << 1)) HandleKeysDown1(event.key.keysym.sym);
 				break;
 			case SDL_KEYUP:
-				HandleKeysUp(event.key.keysym.sym);
+				if(bitmap & (1 << 0)) HandleKeysUp0(event.key.keysym.sym);
+				if(bitmap & (1 << 1)) HandleKeysUp1(event.key.keysym.sym);
 				break;
 
 			default:
@@ -61,16 +79,13 @@ void ProcessInput()
 	}
 }
 
-void HandleKeysDown(SDLKey k)
+void HandleKeysDown0(SDLKey k)
 {
 	switch(k)
 	{
 		case SDLK_ESCAPE:
 			exit(-1);
 			break;
-
-
-
 
 		//controllers[0] movement
 		case SDLK_w:
@@ -92,11 +107,16 @@ void HandleKeysDown(SDLKey k)
 		case SDLK_LSHIFT:
 			controllers[0].buttons[BUTTON_GUARD] = 1;
 			break;
+	}
+}
 
-
-
-
-
+void HandleKeysDown1(SDLKey k)
+{
+	switch(k)
+	{
+		case SDLK_ESCAPE:
+			exit(-1);
+			break;
 
 		//controllers[1] movement
 		case SDLK_UP:
@@ -121,14 +141,13 @@ void HandleKeysDown(SDLKey k)
 
 	}
 }
-void HandleKeysUp(SDLKey k)
+void HandleKeysUp0(SDLKey k)
 {
 	switch(k)
 	{
 		case SDLK_ESCAPE:
 			//CRASH("DAFUQ");
 			break;
-
 
 
 		//controllers[0] movement
@@ -151,9 +170,15 @@ void HandleKeysUp(SDLKey k)
 		case SDLK_LSHIFT:
 			controllers[0].buttons[BUTTON_GUARD] = 0;
 			break;
-
-
-
+	}
+}
+void HandleKeysUp1(SDLKey k)
+{
+	switch(k)
+	{
+		case SDLK_ESCAPE:
+			//CRASH("DAFUQ");
+			break;
 
 
 		//controllers[1] movement
@@ -183,7 +208,7 @@ void HandleKeysUp(SDLKey k)
 void ProcessAxis(Controller_S* controller, Axes_E axis, int dir, int press)
 {
 	controller->__axes[axis][dir] = press;
-	if (press)								 controller->axes[axis] = (dir ?  1 : -1); //I couldn't think of an elegant way to write this, but it does input "snap" similarly to Unity Engine
-	else if (controller->__axes[axis][!dir]) controller->axes[axis] = (dir ? -1 :  1);
+	if (press)								 controller->axes[axis] = (dir ?  1.0f : -1.0f); //I couldn't think of an elegant way to write this, but it does input "snap" similarly to Unity Engine
+	else if (controller->__axes[axis][!dir]) controller->axes[axis] = (dir ? -1.0f :  1.0f);
 	else									 controller->axes[axis] = 0;
 }

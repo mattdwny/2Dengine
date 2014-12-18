@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "SDL.h"
 #include "SDL_image.h"
+#include "SDL_thread.h"
 #include "graphics.h"
 #include "glib.h"
 #include "vector2.h"
@@ -8,13 +9,16 @@
 #include "controller.h"
 #include "font.h"
 #include "audio.h"
+#include "network.h"
 
 extern SDL_Surface* screen;
 extern SDL_Surface* buffer; //pointer to the draw buffer
 extern SDL_Rect Camera;
 
-void InitAll();
+void InitAll(char* host);
+void InitControllers(int map);
 void InitFighters();
+void InitNetwork(char* host);
 void InitPlayer(char* str, float x, float y);
 void InitPlayer(char* str, float x, float y, int c);
 void CleanupAll();
@@ -22,6 +26,7 @@ void ProcessInput();
 void CountDown(char* string, Uint32 color);
 
 int quit = 0;
+SDL_Thread* threads[3] = { NULL, NULL, NULL };
 
 /**
  * this program must be run from the directory directly below images and src, not from within src
@@ -35,7 +40,8 @@ int main(int argc, char** argv)
 	int time = 9999;
 	char timechar[2];
 
-	InitAll();
+	if(argc == 1) InitAll(NULL);
+	else		  InitAll(argv[1]);
 
 	temp = IMG_Load("images/fire_and_ice.jpg");
 	
@@ -71,10 +77,9 @@ int main(int argc, char** argv)
 		NextFrame();
 		//END Draw Events
 
-
+		ProcessInput();
 		//fprintf(stderr, "%x\n", green);
 		//Input and Action Events
-		ProcessInput();
 		ThinkEntityList();
 		PopulateQuadtrees();
 		UpdateEntityList();
@@ -110,36 +115,68 @@ int main(int argc, char** argv)
 }
 
 /**
- * Conjecture: everything required for game clean-up, saving needs to go here
+ * Everything required for game clean-up, saving needs to go here
  */
 void CleanUpAll()
 {
+	int i;
+	for(i = 0; i < 3; i++) SDL_KillThread( threads[i] );
+
 	CloseSprites();
 	CloseEntityList();
-	//any other cleanup functions can be added here
 }
 
 /**
- * Conjecture: everything required for game set-up
+ * Everything required for game set-up
  */
-void InitAll()
+void InitAll(char* host)
 {
 	InitGraphics();
 	LoadFonts();
 	InitAudio();
 	LoadSounds();
-	InitControllers();
 	InitEntityList();
 	InitFighters();
-	InitMouse();
+	if(!host)
+	{
+		printf("case 1");
+		InitControllers(3);
+		//InitNetwork(host);
+	}
+	else if(tolower(*host) == 104 /*ascii h for host*/)
+	{
+		printf("case 2");
+		InitControllers(1);
+		InitNetwork(NULL);
+	}
+	else
+	{
+		printf("case 3");
+		InitControllers(2);
+		InitNetwork(host);
+	}
 	//InitController();
 	atexit(CleanUpAll);
 }
 
+void InitControllers(int map)
+{
+	OpenControllers(map);
+	//threads[0] = SDL_CreateThread( InputThread,    "" );
+}
+
 void InitFighters()
 {
-	InitPlayer("images/hypersphere.png", 200, 600);
-	InitPlayer("images/hypersphere2.png", 800, 600);
+	InitPlayer("images/hypersphere.png", 200, 706);
+	InitPlayer("images/hypersphere2.png", 800, 706);
+}
+
+void InitNetwork(char* host)
+{
+	OpenNetwork(host);
+	if(host == NULL) WaitNetwork();
+	threads[1] = SDL_CreateThread( SendThread,    "" );
+	threads[2] = SDL_CreateThread( ReceiveThread, "" );
 }
 
 void InitPlayer(char* str, float x, float y)

@@ -104,7 +104,7 @@ void FighterThink(void* data)
 	switch(fighter->fightState)
 	{
 		case STAND:
-			printf("standing\n");
+			//printf("standing\n");
 			
 			if(controls->axes[AXIS_MOVE_V] == -1)//to jump
 			{

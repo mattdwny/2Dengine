@@ -58,7 +58,6 @@ void DrawEntityList()
 		{
 			if(__entityList[i].visible)
 			{
-				//fprintf(stderr, "Check: /%x/",__entityList[i].data.fighter.sprite);
 				void (*func)(void* data) = draw[__entityList[i].entType]; //as long as you have a draw function
 				if(func) func(&__entityList[i].data); //draw the entity!
 			}

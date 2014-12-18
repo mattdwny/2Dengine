@@ -12,34 +12,13 @@
 #include "fighter.h"
 #include "projectile.h"
 
-typedef enum { NONE = 0, FIGHTER = 1, PROJECTILE = 2, WALL = 3 } EntityType;
-
-typedef struct HealthBar_S
-{
-	Sprite* sprite;
-	int frame;
-	vec2d pos;
-	vec2d vel;
-	SDL_Rect BBox;
-	float radius;
-} HealthBar;
-
-typedef struct 
-{
-	Sprite* sprite;
-	int frame;
-	vec2d pos;
-	vec2d vel;
-	SDL_Rect BBox;
-	float radius;
-} Wall;
+typedef enum { NONE = 0, FIGHTER = 1, PROJECTILE = 2 } EntityType;
 
 typedef union Data_S
 {	
 	// Possible states when it's in use.	
 	Fighter fighter;
 	Projectile projectile;
-	HealthBar healthBar;
 } Data;
 
 typedef struct Entity_S

@@ -30,7 +30,7 @@ ScreenData  S_Data;
 
 void InitGraphics()
 {
-    Uint32 Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT;
+    Uint32 Vflags = SDL_ANYFORMAT;
     Uint32 HWflag = 0;
     SDL_Surface *temp;
     S_Data.xres = 1024;
@@ -46,19 +46,19 @@ void InitGraphics()
     bmask = 0x00ff0000;
     amask = 0xff000000;
     #endif
-    if ( SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_DOUBLEBUF) < 0 )
+    if ( SDL_Init(0) < 0 || SDL_InitSubSystem(SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_DOUBLEBUF) < 0 )
     {
         CRASH("Unable to init SDL: ", SDL_GetError());
         exit(1);
     }
 	SDL_EnableUNICODE(1);
     atexit(SDL_Quit);
-        if(SDL_VideoModeOK(1024, 768, 32, SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE))
+        if(SDL_VideoModeOK(1024, 768, 32, SDL_ANYFORMAT | SDL_HWSURFACE))
     {
         S_Data.xres = 1024;
         S_Data.yres = 768;
         S_Data.depth = 32;
-        Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE;
+        Vflags = SDL_ANYFORMAT | SDL_HWSURFACE;
         HWflag = SDL_HWSURFACE;
     }
     else if(SDL_VideoModeOK(1024, 768, 16, SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE))
@@ -66,10 +66,10 @@ void InitGraphics()
         S_Data.xres = 1024;
         S_Data.yres = 768;
         S_Data.depth = 16;
-        Vflags = SDL_FULLSCREEN | SDL_ANYFORMAT | SDL_HWSURFACE;
+        Vflags =  SDL_ANYFORMAT | SDL_HWSURFACE;
         HWflag = SDL_HWSURFACE;
     }
-    else if(SDL_VideoModeOK(1024, 768, 16, SDL_FULLSCREEN | SDL_ANYFORMAT))
+    else if(SDL_VideoModeOK(1024, 768, 16,  SDL_ANYFORMAT))
     {
         S_Data.xres = 1024;
         S_Data.yres = 768;
@@ -123,7 +123,7 @@ void NextFrame()
 	NOW = SDL_GetTicks();
 	printf("Time: %d\n", NOW-Then);*/
 
-	FrameDelay(10); /*this will make the frame rate about 100 frames per second. Or twice the EU standard*/
+	FrameDelay(8); /*this will make the frame rate about 100 frames per second. Or twice the EU standard*/
 }
 
 /**
@@ -419,7 +419,6 @@ void FrameDelay(Uint32 delay)
 {
 	static Uint32 prev = 0;
 	Uint32 dif = SDL_GetTicks() - prev;
-
 	if(dif < delay) SDL_Delay(delay - dif); //delay for the adjusted amount of time
 	prev += delay;
 }
@@ -765,34 +764,6 @@ void SwapSprite(SDL_Surface *sprite,int color1,int color2,int color3)
 		}
 	}
 	SDL_UnlockSurface(sprite);
-}
-
-/**
- * mouse handling functions
- * this only handles the drawing and animation of.  Assuming you have a 16 by 16  tiled sprite sheet.  This will not handle input
- */
-void InitMouse()
-{
-	Msprite = LoadSprite("images/hypersphere.png",64, 64, 192);
-	if(Msprite == NULL) fprintf(stdout,"mouse didn't load\n");
-	Mouse.state = 0;
-	Mouse.shown = 0;
-	Mouse.frame = 0;
-}
-
-/**
- * draws to the screen immediately before the blit, after all
- * it wouldn't be a very good mouse if it got covered up by the
- * game content
- */
-void DrawMouse()
-{
-	int mx,my;
-	SDL_GetMouseState(&mx, &my);
-	if(Msprite != NULL) DrawSprite(Msprite, screen, mx, my, Mouse.frame);
-	Mouse.frame = (Mouse.frame + 1) % Msprite->frames;
-	Mouse.x = mx;
-	Mouse.y = my;
 }
 
 /*
