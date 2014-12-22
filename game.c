@@ -175,8 +175,8 @@ void InitNetwork(char* host)
 {
 	OpenNetwork(host);
 	if(host == NULL) WaitNetwork();
-	threads[1] = SDL_CreateThread( SendThread,    "" );
-	threads[2] = SDL_CreateThread( ReceiveThread, "" );
+	threads[1] = SDL_CreateThread( Send,    "" );
+	threads[2] = SDL_CreateThread( Receive, "" );
 }
 
 void InitPlayer(char* str, float x, float y)
