@@ -9,6 +9,7 @@ IPaddress addresses[2];
 TCPsocket sockets[2];
 char buffer[2][256]; //used for SENDER and RECEIVER
 int player = 0;
+int port = 7513;
 
 //NOTE: I may have to recreate the code so that client and server are not mixed into the same code "network.c" but hopefully I don't to make using the network more abstract.
 //Supplemental resources:
@@ -29,13 +30,13 @@ void OpenNetwork(const char* host)
 	if(host == NULL) player = 0;
 	else			 player = 1;
 
-	if(SDLNet_ResolveHost(&addresses[ player], host, 10000) == -1) CRASH("SDLNet_ResolveHost: ", SDLNet_GetError()); //notice the port numbers are different for SEND/RECEIVE
-	if(SDLNet_ResolveHost(&addresses[!player], host, 10001) == -1) CRASH("SDLNet_ResolveHost: ", SDLNet_GetError()); 
+	if(SDLNet_ResolveHost(&addresses[0], host, port  ) == -1) CRASH("SDLNet_ResolveHost: ", SDLNet_GetError()); //notice the port numbers are different for SEND/RECEIVE
+	if(SDLNet_ResolveHost(&addresses[1], host, port+1) == -1) CRASH("SDLNet_ResolveHost: ", SDLNet_GetError()); 
 
-	sockets[ player] = SDLNet_TCP_Open(&addresses[ player]);	sockets[!player] = SDLNet_TCP_Open(&addresses[!player]);
+	sockets[0] = SDLNet_TCP_Open(&addresses[0]);	sockets[1] = SDLNet_TCP_Open(&addresses[1]);
 	
-	if(!sockets[ player]) CRASH("SDLNet_TCP_Open SENDER failure");
-	if(!sockets[!player]) CRASH("SDLNet_TCP_Open RECEIVER failure");
+	if(!sockets[0]) CRASH("SDLNet_TCP_Open P1 failure");
+	if(!sockets[1]) CRASH("SDLNet_TCP_Open P2 failure");
 
 	//Debug code...
 	if(player == 1)
@@ -144,7 +145,7 @@ void Receive() //the function will receive and write to the data buffer
 	//printf("stored: /%f/",*(float*)buffer[!player]);
 }
 
-int SendThread(void*)	 { Thread(Send ); }
+int SendThread(void*)	 { Thread(Send); }
 int ReceiveThread(void*) { Thread(Receive); }
 
 void CloseNetwork()
