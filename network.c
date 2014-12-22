@@ -37,6 +37,19 @@ void OpenNetwork(const char* host)
 	if(!sockets[ player]) CRASH("SDLNet_TCP_Open SENDER failure");
 	if(!sockets[!player]) CRASH("SDLNet_TCP_Open RECEIVER failure");
 
+	//Debug code...
+	if(player == 1)
+	{
+		IPaddress* tester = SDLNet_TCP_GetPeerAddress(sockets[player]);
+		printf("\n%i:%i\n", tester->host, tester->port);
+		tester = SDLNet_TCP_GetPeerAddress(sockets[!player]);
+		printf("\n%i:%i\n", tester->host, tester->port);
+
+		printf("going to...\n");
+		printf("\n%i:%i\n", addresses[player].host, addresses[player].port);
+		printf("\n%i:%i\n", addresses[!player].host, addresses[!player].port);
+	}
+
 	//TODO: according to this code the client will connect to the server, but the server will never save the client's connection
 }
 
@@ -47,25 +60,36 @@ void WaitNetwork()
 	{
 		while (true)
 		{
-			printf("Hello");
+			//printf("Hello");
 
 			SDL_Delay(1); //so I don't kill my CPU
 
 			if ((connection = SDLNet_TCP_Accept(sockets[i])))
 			{
+				//Debug code...
+				IPaddress* tester;// = SDLNet_TCP_GetPeerAddress(sockets[i]);
+				//printf("\n%i:%i\n", tester->host, tester->port);
+				tester = SDLNet_TCP_GetPeerAddress(connection);
+				printf("\n%i:%i\n", tester->host, tester->port);
 				SDLNet_TCP_Close(sockets[i]);
 				sockets[i] = connection;
 				break;
 			}
 		}
 	}
+
+	printf("going to...\n");
+	printf("\n%i:%i\n", addresses[player].host, addresses[player].port);
+	printf("\n%i:%i\n", addresses[!player].host, addresses[!player].port);
 }
 
-void Thread(TCPsocket socket, void (*subroutine)())
+void Thread(void (*subroutine)())
 {
 	while (true) //the thread will be killed by the game.c main (theoretically)
 	{
 		SDL_Delay(1); //so I don't kill my CPU
+
+		printf("1");
 
 		subroutine();
 	}
@@ -75,16 +99,24 @@ void Send() //the data buffer will be used to read from then send
 {
 	Fighter* fighter = &__entityList[player].data.fighter;
 
-	*(float*)(&buffer[player] + 0) = fighter->pos[0];
-	*(float*)(&buffer[player] + 4) = fighter->pos[1];
-	*(float*)(&buffer[player] + 8) = fighter->vel[0];
-	*(float*)(&buffer[player] + 12) = fighter->vel[1];
-	*(FighterState*)(&buffer[player] + 16) = fighter->fightState;
-	printf("send: %s/",buffer[player]);
+	/*printf("used: /%i/\n",__entityList[!player].used);
+	printf("buffer position: /%x/\n",buffer[player]);
+	printf("float position + 4: /%x/\n",(float*)(buffer[player] + 4));*/
+	*(float*)(buffer[player] + 0) = fighter->pos[0];
+	*(float*)(buffer[player] + 4) = fighter->pos[1];
+	*(float*)(buffer[player] + 8) = fighter->vel[0];
+	*(float*)(buffer[player] + 12) = fighter->vel[1];
+
+	*(int*)(&buffer[player] + 16) = (int) fighter->fightState; //only needs a byte but w/e
+	//printf("send: /%f/",*(float*)buffer[player]);
 	//Primary Reference: http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
-	if (SDLNet_TCP_Send(sockets[ player], buffer[ player], 256) > 0)
+	if (SDLNet_TCP_Send(sockets[ player], buffer[ player], 256) < 10)
 	{
-		
+		//printf("(send-error)");	
+	}
+	else
+	{
+		//printf("(send-working)");
 	}
 }
 
@@ -92,20 +124,28 @@ void Receive() //the function will receive and write to the data buffer
 {
 	Fighter* fighter = &__entityList[!player].data.fighter;
 
+	//printf("used: /%i/\n",__entityList[!player].used);
+	
 	//Primary Reference: http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
 	if (SDLNet_TCP_Recv(sockets[!player], buffer[!player], 256) > 0)
-	{
+	{	
 		fighter->pos[0] = *(float*) (buffer[!player] + 0);
 		fighter->pos[1] = *(float*) (buffer[!player] + 4);
 		fighter->vel[0] = *(float*) (buffer[!player] + 8);
 		fighter->vel[1] = *(float*) (buffer[!player] + 12);
-		fighter->fightState = *(FighterState*) (buffer[!player] + 16);
-		printf("receive: %s/",buffer[!player]);
+		fighter->fightState = (FighterState) * (int*) ( buffer[!player] + 16);
+		//printf("receive: /%s/",buffer[!player]);
+		//printf("(receive-working)");
 	}
+	else
+	{
+		//printf("(receive-error)");
+	}
+	//printf("stored: /%f/",*(float*)buffer[!player]);
 }
 
-int SendThread(void*)	 { Thread(sockets[ player],   Send ); }
-int ReceiveThread(void*) { Thread(sockets[!player], Receive); }
+int SendThread(void*)	 { Thread(Send ); }
+int ReceiveThread(void*) { Thread(Receive); }
 
 void CloseNetwork()
 {
