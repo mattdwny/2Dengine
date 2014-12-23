@@ -20,6 +20,7 @@ typedef struct Fighter_S
 	vec2d storedKnockback;
 	int maxJumps;
 	int curJumps;
+	float health;
 	float jumpSpeed;
 	float runSpeed;
 	float stopSpeed;

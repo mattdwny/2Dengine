@@ -1,6 +1,8 @@
-#include "fighter.h"
 #include "globals.h"
 #include "controller.h"
+#include "fighter.h"
+#include "projectile.h"
+#include "font.h"
 
 #define __maxFighters 2
 
@@ -30,8 +32,10 @@ void* FighterInit(void* data)
 
 	fighter->fightState = STAND;
 
+	fighter->id = controllerFree;
 	fighter->controller = &controllers[controllerFree++];
 
+	fighter->health = 0;
 	fighter->maxJumps = 2;
 	fighter->curJumps = 2;
 	fighter->gravity = 128*9.8f/1.8f;
@@ -59,6 +63,9 @@ void FighterDestroy(void* data)
 
 void FighterDraw(void* data)
 {
+	char str[3];
+	int i;
+
 	Fighter* fighter;
 
 	if(!data) return;
@@ -75,22 +82,15 @@ void FighterDraw(void* data)
 
 	if(fighter->fightState == BLOCK) mult_circle(screen, (int) trans->pos[0], (int) trans->pos[1], 32, Black_);
 
-	//fighter->frame += CROSS(
+	if(fighter->health > 0) i = floor(fighter->health);
+	else					i = ceil (fighter->health);
+
+	itoa(i,str,10);
+
+	if(fighter->id == 0) DrawTextCentered(str, screen, 100,				   ResolutionY_/2 - 300, LightBlue_  , 0xd0e517c, F_Medium);
+	else				 DrawTextCentered(str, screen, ResolutionX_ - 100, ResolutionY_/2 - 300, LightOrange_, 0xd0e517c, F_Medium);
 
 	SpriteFrameHandler(fighter);
-
-	//printf("The frame number is %f\n", fighter->frame);
-
-	switch(fighter->fightState)
-	{
-		case ROLL: case SPOT_DODGE: case AIR_DODGE: case FLOOR_TECH: case CEIL_TECH: case LWALL_TECH: case RWALL_TECH:
-			//fighter->frame = (fighter->frame + 1) % fighter->sprite->frames;
-			break;
-
-		default:
-			//if(frameslow % 4 == 0) fighter->frame = (fighter->frame + 1) % fighter->sprite->frames;
-			break;
-	}
 }
 
 void FighterThink(void* data)
@@ -207,6 +207,8 @@ void FighterThink(void* data)
 	ApplyHalfGravity(fighter);
 
 	Clamp(fighter);
+
+	fighter->health -= (ResolutionX_/2 - trans->pos[0]) / 50 / 60; //roughly 10hp per second of damage at extremes
 }
 
 void FighterUpdate(void* data)
@@ -291,6 +293,17 @@ void SpriteFrameHandler(Fighter* fighter)
 	fighter->frame += cross;
 	while(fighter->frame >= fighter->sprite->frames) fighter->frame -= fighter->sprite->frames; //clamp and float modulo frames into a valid range. If statements might be sufficient in the future.
 	while(fighter->frame < 0)						 fighter->frame += fighter->sprite->frames;
+
+	/*switch(fighter->fightState)
+	{
+		case ROLL: case SPOT_DODGE: case AIR_DODGE: case FLOOR_TECH: case CEIL_TECH: case LWALL_TECH: case RWALL_TECH:
+			//fighter->frame = (fighter->frame + 1) % fighter->sprite->frames;
+			break;
+
+		default:
+			//if(frameslow % 4 == 0) fighter->frame = (fighter->frame + 1) % fighter->sprite->frames;
+			break;
+	}*/
 }
 
 void Clamp(Fighter* fighter)

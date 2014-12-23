@@ -418,7 +418,7 @@ void __PutPixel(SDL_Surface* surface, int x, int y, Uint32 pixel)
  */
 void FrameDelay(Uint32 delay)
 {
-	static Uint32 prev = 0;
+	static Uint32 prev = SDL_GetTicks(); //this might be the critical bugfix for stopping time "speeding up"
 	Uint32 dif = SDL_GetTicks() - prev;
 	if(dif < delay) SDL_Delay(delay - dif); //delay for the adjusted amount of time
 	prev += delay;

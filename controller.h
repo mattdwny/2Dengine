@@ -1,6 +1,8 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
+#include "SDL.h"
+
 #define HLEFT 0
 #define HRIGHT 1
 #define VUP 0

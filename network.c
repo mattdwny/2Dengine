@@ -75,15 +75,16 @@ int Send(void* data) //the data buffer will be used to read from then send
 		*(float*)(buffer[player] + 8) = trans->vel[0];
 		*(float*)(buffer[player] + 12) = trans->vel[1];
 		*(int*)(buffer[player] + 16) = (int) fighter->fightState; //only needs a byte but w/e
+		*(float*)(buffer[player] + 20) = fighter->health;
 
 		knockbackX = fighter->storedKnockback[0]; //I figured this solution would be thread-safer since the entity list is not locked when it is used
 		knockbackY = fighter->storedKnockback[1];
 		fighter->storedKnockback[0] -= knockbackX; //I think -= is going to be thread unsafe: confirmed http://stackoverflow.com/questions/9278764/are-primitive-datatypes-thread-safe-in-java #3
 		fighter->storedKnockback[1] -= knockbackY;
-		*(float*)(buffer[player] + 20) = knockbackX;
-		*(float*)(buffer[player] + 24) = knockbackY;
+		*(float*)(buffer[player] + 24) = knockbackX;
+		*(float*)(buffer[player] + 28) = knockbackY;
 
-		if (SDLNet_TCP_Send(sockets[ player], buffer[ player], 28) < 10) //Primary Reference: http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
+		if (SDLNet_TCP_Send(sockets[ player], buffer[ player], 32) < 10) //Primary Reference: http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
 		{
 			printf("(send-error)");	
 		}
@@ -101,16 +102,17 @@ int Receive(void* data) //the function will receive and write to the data buffer
 
 	while (true) //the thread will be killed by the game.c main (theoretically)
 	{
-		if (SDLNet_TCP_Recv(sockets[!player], buffer[!player], 28) > 0) //Primary Reference: http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
+		if (SDLNet_TCP_Recv(sockets[!player], buffer[!player], 32) > 0) //Primary Reference: http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
 		{	
 			them->trans.pos[0] = *(float*) (buffer[!player] + 0);
 			them->trans.pos[1] = *(float*) (buffer[!player] + 4);
 			them->trans.vel[0] = *(float*) (buffer[!player] + 8);
 			them->trans.vel[1] = *(float*) (buffer[!player] + 12);
 			them->fightState = (FighterState) * (int*) ( buffer[!player] + 16);
+			them->health = *(float*) (buffer[!player] + 20);
 
-			you->trans.vel[0] += *(float*) (buffer[!player] + 20);
-			you->trans.vel[1] += *(float*) (buffer[!player] + 24);
+			you->trans.vel[0] += *(float*) (buffer[!player] + 24);
+			you->trans.vel[1] += *(float*) (buffer[!player] + 28);
 		}
 		else
 		{

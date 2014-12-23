@@ -17,6 +17,8 @@ extern SDL_Surface* screen;
 extern SDL_Surface* buffer; //pointer to the draw buffer
 extern SDL_Rect Camera;
 
+extern Fighter* fighters[2];
+
 void InitAll();
 void InitControllers(int map);
 void InitFighters();
@@ -26,6 +28,9 @@ void InitPlayer(char* str, float x, float y, int c);
 void CleanupAll();
 void ProcessInput();
 void CountDown(char* string, Uint32 color);
+
+void TimeOut();
+void WinGame(int i);
 
 void LevelEditor(char* edit);
 void TileLevel(char* level);
@@ -132,38 +137,25 @@ int main(int argc, char** argv)
 		NextFrame();
 		//END Draw Events
 
+
+		//BEGIN Input
 		ProcessInput();
-		//Input and Action Events
+		//END Input
+
+
+		//BEGIN Action Events
 		ThinkEntityList();
 		PopulateQuadtrees();
 		UpdateEntityList();
-		//End Input and Action Events
+		//END Action Events
 
 		time--;
-		if(time < 0) goto timeout;
+		if(time < 0) TimeOut();
+		//else if(abs(fighters[0]->health) >= 100.0f) WinGame(1);
+		//else if(abs(fighters[1]->health) >= 100.0f) WinGame(0);
 	}
 
 	exit(0);   //technically this will end the program, but the compiler likes all functions that can return a value TO return a value
-
-	timeout:
-
-	PlaySound(TIME_);
-	CountDown("Time!", Blue_);
-	CountDown("Time!", Blue_);
-	CountDown("Time!", Blue_);
-	CountDown("Time!", Blue_);
-	CountDown("Time!", Blue_);
-
-	wincond:
-
-	PlaySound(GAME_);
-	CountDown("Game!", Red_);
-	CountDown("Game!", Red_);
-	CountDown("Game!", Red_);
-	CountDown("Game!", Red_);
-	CountDown("Game!", Red_);
-
-	exit(0);
 
 	return 0;
 }
@@ -239,6 +231,45 @@ void CountDown(char* string, Uint32 color)
 
 	NextFrame();
 	FrameDelay(1000);
+}
+
+void TimeOut()
+{
+	PlaySound(TIME_);
+	CountDown("Time!", Blue_);
+	CountDown("Time!", Blue_);
+	CountDown("Time!", Blue_);
+	CountDown("Time!", Blue_);
+	CountDown("Time!", Blue_);
+
+	exit(0);
+}
+
+void WinGame(int i)
+{
+	PlaySound(GAME_);
+	CountDown("Game!", Red_);
+	CountDown("Game!", Red_);
+	CountDown("Game!", Red_);
+	CountDown("Game!", Red_);
+	CountDown("Game!", Red_);
+
+	if(i == 0)
+	{
+		CountDown("Player 1 Wins!", LightBlue_);
+		CountDown("Player 1 Wins!", LightBlue_);
+		CountDown("Player 1 Wins!", LightBlue_);
+		CountDown("Player 1 Wins!", LightBlue_);
+		CountDown("Player 1 Wins!", LightBlue_);
+	}
+	else if(i == 1)
+	{
+		CountDown("Player 2 Wins!", LightOrange_);
+		CountDown("Player 2 Wins!", LightOrange_);
+		CountDown("Player 2 Wins!", LightOrange_);
+		CountDown("Player 2 Wins!", LightOrange_);
+		CountDown("Player 2 Wins!", LightOrange_);
+	}
 }
 
 void LevelEditor(char* edit)
