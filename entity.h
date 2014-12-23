@@ -17,6 +17,7 @@ typedef enum { NONE = 0, FIGHTER = 1, PROJECTILE = 2 } EntityType;
 typedef union Data_S
 {	
 	// Possible states when it's in use.	
+	Transform trans; //"inherited" by fighter and projectile, must be first in their declaration or this won't work
 	Fighter fighter;
 	Projectile projectile;
 } Data;
@@ -27,7 +28,7 @@ typedef struct Entity_S
 	int visible; //should we render the object?
 
 	EntityType entType;
-	AABB rect;
+	Transform trans;
 
     struct Entity_S* next;
 	Data data;

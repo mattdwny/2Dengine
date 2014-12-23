@@ -9,6 +9,6 @@ typedef struct AABB_S
 
 int BoxOnBox(AABB* first, AABB* second);
 void AABBtoCircle(AABB* rect, float* x, float* y, float* r);
-int CircleOnCircle(float x1, float y1, float r1, float x2, float y2, float r2, float* outX, float* outY);
+int CircleOnCircle(float* a, float* b, float ar, float br, float* outX, float* outY);
 
 #endif

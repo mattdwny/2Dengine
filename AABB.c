@@ -11,26 +11,29 @@ int BoxOnBox(AABB* first, AABB* second)
     return true;
 }
 
-void AABBtoCircle(AABB* rect, float* x, float* y, float* r)
+/*void AABBtoCircle(AABB* rect, float* x, float* y, float* r)
 {
 	*x = (rect->min[0] + rect->max[0])/2;
 	*y = (rect->min[1] + rect->max[1])/2;
 	*r = *x - rect->min[0];
-}
+}*/
 
-int CircleOnCircle(float x1, float y1, float r1, float x2, float y2, float r2, float* outX, float* outY)
+int CircleOnCircle(float* a, float* b, float ar, float br, float* outX, float* outY)
 {
 	float x,y,r,magSqr;
 
-	x = x2 - x1;
-	y = y2 - y1;
+	x = b[0] - a[0];
+	y = b[1] - a[1];
 	
-	r = r1 + r2;
+	r = ar + br;
 
 	magSqr = x*x + y*y;
 
-	if(magSqr > r*r)
+	if(magSqr <= r*r)
 	{
+		magSqr = sqrt(magSqr) - ar; //get the distance the hitbox (b) has embedded into the hurtbox (a)
+		x /= magSqr;
+		y /= magSqr;
 		*outX = x;
 		*outY = y;
 		return 1;

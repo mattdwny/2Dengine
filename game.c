@@ -71,8 +71,8 @@ int main(int argc, char** argv)
 		ResetBuffer ();
 		DrawEntityList();
  
-		DrawTextCentered(itoa(time/100,timechar,10),screen, ResolutionX_/2 + 24, ResolutionY_/2 - 300, Green_, 0xdeadbeef, F_Large);
-		if(frame++ < 500) DrawTextCentered("GO!",screen, ResolutionX_/2 + 60, ResolutionY_/2 - 200, Green_, 0xdeadbeef, F_Large);
+		DrawTextCentered(itoa(time/100,timechar,10),screen, ResolutionX_/2 + 24, ResolutionY_/2 - 300, Green_, 0x1337babe, F_Large);
+		if(frame++ < 500) DrawTextCentered("GO!",screen, ResolutionX_/2 + 60, ResolutionY_/2 - 200, Green_, 0x1337babe, F_Large);
 
 		NextFrame();
 		//END Draw Events
@@ -143,7 +143,7 @@ void InitAll(char* host)
 		InitControllers(3);
 		//InitNetwork(host);
 	}
-	else if(tolower(*host) == 104 /*ascii h for host*/)
+	else if(tolower(*host) == 104 || tolower(*host) == 108 /*ascii h for host or l for localhost*/)
 	{
 		printf("case 2");
 		InitControllers(1);
@@ -167,8 +167,8 @@ void InitControllers(int map)
 
 void InitFighters()
 {
-	InitPlayer("images/hypersphere.png", 200, 706);
-	InitPlayer("images/hypersphere2.png", 800, 706);
+	InitPlayer("images/hypersphere.png", 200, 736);
+	InitPlayer("images/hypersphere2.png", 800, 736);
 }
 
 void InitNetwork(char* host)
@@ -187,13 +187,13 @@ void InitPlayer(char* str, float x, float y)
 void InitPlayer(char* str, float x, float y, int c)
 {
 	Fighter* fighter = (Fighter*) GetEntity(FIGHTER);
-
+	Transform* trans = &fighter->trans;
 	//fprintf(stderr,"Worked I guess");
 
 	fighter->sprite = LoadSprite(str, 64, 64, 192, c, c, c);
 	fighter->frame = 0;
-	fighter->pos[0] = x;
-	fighter->pos[1] = y;
+	trans->pos[0] = x;
+	trans->pos[1] = y;
 }
 
 void CountDown(char* string, Uint32 color)
@@ -201,7 +201,7 @@ void CountDown(char* string, Uint32 color)
 	ResetBuffer ();
 	DrawEntityList();
  
-	DrawTextCentered(string,screen, ResolutionX_/2 + 7, ResolutionY_/2 - 200, color, 0xdeadbeef, F_Large);
+	DrawTextCentered(string,screen, ResolutionX_/2 + 7, ResolutionY_/2 - 200, color, 0x1337babe, F_Large);
 
 	NextFrame();
 	FrameDelay(1000);

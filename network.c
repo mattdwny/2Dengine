@@ -3,7 +3,7 @@
 #include "globals.h"
 #include "entity.h"
 
-extern Entity* __entityList;
+extern Entity* __entityList; //volatile data due to multithreading
 
 IPaddress addresses[2];
 TCPsocket sockets[2];
@@ -89,23 +89,30 @@ void WaitNetwork()
 int Send(void* data) //the data buffer will be used to read from then send
 {
 	Fighter* fighter = &__entityList[player].data.fighter;
+	Transform* trans = &fighter->trans;
+	float knockbackX, knockbackY;
 
 	while (true) //the thread will be killed by the game.c main (theoretically)
 	{
-		*(float*)(buffer[player] + 0) = fighter->pos[0];
-		*(float*)(buffer[player] + 4) = fighter->pos[1];
-		*(float*)(buffer[player] + 8) = fighter->vel[0];
-		*(float*)(buffer[player] + 12) = fighter->vel[1];
+		*(float*)(buffer[player] + 0) = trans->pos[0];
+		*(float*)(buffer[player] + 4) = trans->pos[1];
+		*(float*)(buffer[player] + 8) = trans->vel[0];
+		*(float*)(buffer[player] + 12) = trans->vel[1];
 		*(int*)(&buffer[player] + 16) = (int) fighter->fightState; //only needs a byte but w/e
-		
-		if (SDLNet_TCP_Send(sockets[ player], buffer[ player], 256) < 10) //Primary Reference: http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
+
+		knockbackX = fighter->storedKnockback[0]; //I figured this solution would be thread-safer since the entity list is not locked when it is used
+		knockbackY = fighter->storedKnockback[1];
+		fighter->storedKnockback[0] -= knockbackX; //I think -= is going to be thread unsafe: confirmed http://stackoverflow.com/questions/9278764/are-primitive-datatypes-thread-safe-in-java #3
+		fighter->storedKnockback[1] -= knockbackY;
+		*(float*)(buffer[player] + 20) = knockbackX;
+		*(float*)(buffer[player] + 24) = knockbackY;
+
+		if (SDLNet_TCP_Send(sockets[ player], buffer[ player], 28) < 10) //Primary Reference: http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
 		{
-			//printf("(send-error)");	
-		} else {
-			//printf("(send-working)");
+			printf("(send-error)");	
 		}
 
-		SDL_Delay(10); //so I don't kill my CPU or bandwidth (when the game is run on the internet)
+		SDL_Delay(10); //so I don't kill my CPU or bandwidth
 	}
 
 	return 0;
@@ -113,21 +120,25 @@ int Send(void* data) //the data buffer will be used to read from then send
 
 int Receive(void* data) //the function will receive and write to the data buffer
 {
-	Fighter* fighter = &__entityList[!player].data.fighter;
+	Fighter* them = &__entityList[!player].data.fighter;
+	Fighter* you = &__entityList[player].data.fighter; //knockback yourself when the enemy hits you
 
 	while (true) //the thread will be killed by the game.c main (theoretically)
 	{
-		if (SDLNet_TCP_Recv(sockets[!player], buffer[!player], 256) > 0) //Primary Reference: http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
+		if (SDLNet_TCP_Recv(sockets[!player], buffer[!player], 28) > 0) //Primary Reference: http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
 		{	
-			fighter->pos[0] = *(float*) (buffer[!player] + 0);
-			fighter->pos[1] = *(float*) (buffer[!player] + 4);
-			fighter->vel[0] = *(float*) (buffer[!player] + 8);
-			fighter->vel[1] = *(float*) (buffer[!player] + 12);
-			fighter->fightState = (FighterState) * (int*) ( buffer[!player] + 16);
-			//printf("receive: /%s/",buffer[!player]);
-			//printf("(receive-working)");
-		} else {
-			//printf("(receive-error)");
+			them->trans.pos[0] = *(float*) (buffer[!player] + 0);
+			them->trans.pos[1] = *(float*) (buffer[!player] + 4);
+			them->trans.vel[0] = *(float*) (buffer[!player] + 8);
+			them->trans.vel[1] = *(float*) (buffer[!player] + 12);
+			them->fightState = (FighterState) * (int*) ( buffer[!player] + 16);
+
+			you->trans.vel[0] += *(float*) (buffer[!player] + 20);
+			you->trans.vel[1] += *(float*) (buffer[!player] + 24);
+		}
+		else
+		{
+			printf("(receive-error)");
 		}
 	}
 

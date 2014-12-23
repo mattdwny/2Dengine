@@ -69,9 +69,11 @@ void FighterDraw(void* data)
 
 	if(fighter->sprite == NULL) return; //nothing to draw
 
-	DrawSprite(fighter->sprite, (int) fighter->pos[0] - 32, (int) fighter->pos[1] - 32, (int) floor(fighter->frame)); //draw the player so he is centered, hence -32
+	Transform* trans = &fighter->trans;
 
-	if(fighter->fightState == BLOCK) mult_circle(screen, (int) fighter->pos[0], (int) fighter->pos[1], 32, Black_);
+	DrawSprite(fighter->sprite, (int) trans->pos[0] - 32, (int) trans->pos[1] - 32, (int) floor(fighter->frame)); //draw the player so he is centered, hence -32
+
+	if(fighter->fightState == BLOCK) mult_circle(screen, (int) trans->pos[0], (int) trans->pos[1], 32, Black_);
 
 	//fighter->frame += CROSS(
 
@@ -100,6 +102,7 @@ void FighterThink(void* data)
 	//...
 
 	Controller* controls = fighter->controller;
+	Transform* trans = &fighter->trans;
 
 	switch(fighter->fightState)
 	{
@@ -109,7 +112,7 @@ void FighterThink(void* data)
 			if(controls->axes[AXIS_MOVE_V] == -1)//to jump
 			{
 				fighter->fightState = FALL;
-				fighter->vel[AXIS_MOVE_V] = fighter->jumpSpeed;
+				trans->vel[AXIS_MOVE_V] = fighter->jumpSpeed;
 			}
 			else if(controls->axes[AXIS_MOVE_V] == 1) fighter->fightState = CROUCH; //to crouch
 			else if(controls->buttons[BUTTON_GUARD]) fighter->fightState = BLOCK; //to block
@@ -147,7 +150,7 @@ void FighterThink(void* data)
 			if(controls->axes[AXIS_MOVE_V] == -1)//to jump
 			{
 				fighter->fightState = FALL;
-				fighter->vel[AXIS_MOVE_V] = fighter->jumpSpeed;
+				trans->vel[AXIS_MOVE_V] = fighter->jumpSpeed;
 			}
 			//to jump
 			//to stand
@@ -199,8 +202,8 @@ void FighterThink(void* data)
 	MovePlayer(fighter);
 
 	ApplyHalfGravity(fighter); //check it: http://www.niksula.hut.fi/~hkankaan/Homepages/gravity.html
-	fighter->pos[AXIS_MOVE_H] += fighter->vel[AXIS_MOVE_H] * deltaTime;
-	fighter->pos[AXIS_MOVE_V] += fighter->vel[AXIS_MOVE_V] * deltaTime;
+	trans->pos[AXIS_MOVE_H] += trans->vel[AXIS_MOVE_H] * deltaTime;
+	trans->pos[AXIS_MOVE_V] += trans->vel[AXIS_MOVE_V] * deltaTime;
 	ApplyHalfGravity(fighter);
 
 	Clamp(fighter);
@@ -217,19 +220,20 @@ void FighterUpdate(void* data)
 
 void ApplyHalfGravity(Fighter* fighter)
 {
+	Transform* trans = &fighter->trans;
 	switch(fighter->fightState)
 	{
 		case FALL: case AIR_DODGE: case TUMBLE: case AIR_STUN: case CEIL_TECH: case LWALL_TECH: case RWALL_TECH: case AIR_GRAB: //fast fall doesn't need gravity because it is already maxed out/terminal vel
 			float factor;
 			factor = fighter->gravity/2 * deltaTime;
 			
-			if(fighter->vel[AXIS_MOVE_V] > fighter->fallSpeed*0.8f && fighter->vel[AXIS_MOVE_V] < fighter->fallSpeed)
+			if(trans->vel[AXIS_MOVE_V] > fighter->fallSpeed*0.8f && trans->vel[AXIS_MOVE_V] < fighter->fallSpeed)
 			{
-				factor *= (fighter->fallSpeed - fighter->vel[AXIS_MOVE_V])/fighter->fallSpeed * 2; 
+				factor *= (fighter->fallSpeed - trans->vel[AXIS_MOVE_V])/fighter->fallSpeed * 2; 
 			}
-			fighter->vel[AXIS_MOVE_V] += factor;
+			trans->vel[AXIS_MOVE_V] += factor;
 
-			if(fighter->vel[AXIS_MOVE_V] > fighter->fallSpeed) fighter->vel[AXIS_MOVE_V] = fighter->fallSpeed;
+			if(trans->vel[AXIS_MOVE_V] > fighter->fallSpeed) trans->vel[AXIS_MOVE_V] = fighter->fallSpeed;
 			break;
 	}
 }
@@ -237,22 +241,23 @@ void ApplyHalfGravity(Fighter* fighter)
 void MovePlayer(Fighter* fighter)
 {
 	Controller* controls = fighter->controller;
+	Transform* trans = &fighter->trans;
 
 	switch(fighter->fightState)
 	{
 		case MOVE: 
-			fighter->vel[0] -= sign(fighter->vel[0]) * fighter->friction * deltaTime; //apply friction when grounded
-			if(controls->axes[0] == 0) fighter->vel[0] -= sign(fighter->vel[0]) * fighter->runAccel * deltaTime; //apply runAccel friction with no input
+			trans->vel[0] -= sign(trans->vel[0]) * fighter->friction * deltaTime; //apply friction when grounded
+			if(controls->axes[0] == 0) trans->vel[0] -= sign(trans->vel[0]) * fighter->runAccel * deltaTime; //apply runAccel friction with no input
 			//break intentionally omitted
 
 		case FALL: case FASTFALL:
-			if(controls->axes[0] != 0) fighter->vel[0] += controls->axes[0] * fighter->runAccel * deltaTime; //apply player movement on MOVE, FALL, FASTFALL
+			if(controls->axes[0] != 0) trans->vel[0] += controls->axes[0] * fighter->runAccel * deltaTime; //apply player movement on MOVE, FALL, FASTFALL
 
-			if     (fighter->vel[0] >  fighter->runSpeed) fighter->vel[0] =  fighter->runSpeed;
-			else if(fighter->vel[0] < -fighter->runSpeed) fighter->vel[0] = -fighter->runSpeed;
-			else if(abs(fighter->vel[0]) < fighter->stopSpeed && controls->axes[0] == 0 && fighter->fightState == MOVE)
+			if     (trans->vel[0] >  fighter->runSpeed) trans->vel[0] =  fighter->runSpeed;
+			else if(trans->vel[0] < -fighter->runSpeed) trans->vel[0] = -fighter->runSpeed;
+			else if(abs(trans->vel[0]) < fighter->stopSpeed && controls->axes[0] == 0 && fighter->fightState == MOVE)
 			{
-				fighter->vel[0] = 0;
+				trans->vel[0] = 0;
 				fighter->fightState = STAND;
 			}
 			break;
@@ -271,14 +276,16 @@ void MovePlayer(Fighter* fighter)
 
 void SpriteFrameHandler(Fighter* fighter)
 {
+	Transform* trans = &fighter->trans;
+
 	static vec2d center = { ResolutionX_*0.5, ResolutionY_*0.5 };
 	vec2d toCenter;
 	float cross;
 
-	toCenter[0] = center[0] - fighter->pos[0]; //find the direction of the player relative to the center
-	toCenter[1] = center[1] - fighter->pos[1];
+	toCenter[0] = center[0] - trans->pos[0]; //find the direction of the player relative to the center
+	toCenter[1] = center[1] - trans->pos[1];
 
-	cross = toCenter[1]*fighter->vel[0] - toCenter[0]*fighter->vel[1];
+	cross = toCenter[1]*trans->vel[0] - toCenter[0]*trans->vel[1];
 	cross /= 100000;
 
 	fighter->frame += cross;
@@ -288,26 +295,28 @@ void SpriteFrameHandler(Fighter* fighter)
 
 void Clamp(Fighter* fighter)
 {
-	if(fighter->pos[1] > ResolutionY_ - 32)
+	Transform* trans = &fighter->trans;
+
+	if(trans->pos[1] > ResolutionY_ - 32)
 	{
-		fighter->pos[1] = ResolutionY_ - 32;
-		fighter->vel[1] = 0;
-		if(fighter->vel[0] != 0) fighter->fightState = MOVE;
-		else					 fighter->fightState = STAND;
+		trans->pos[1] = ResolutionY_ - 32;
+		trans->vel[1] = 0;
+		if(trans->vel[0] != 0) fighter->fightState = MOVE;
+		else				   fighter->fightState = STAND;
 	}
-	if(fighter->pos[0] < 32)
+	if(trans->pos[0] < 32)
 	{
-		fighter->pos[0] = 32;
-		fighter->vel[0] = 0;
-		if(fighter->pos[1] < ResolutionY_ - 32) fighter->fightState = FALL;
-		else									fighter->fightState = STAND;
+		trans->pos[0] = 32;
+		trans->vel[0] = 0;
+		if(trans->pos[1] < ResolutionY_ - 32) fighter->fightState = FALL;
+		else								  fighter->fightState = STAND;
 	}
-	if(fighter->pos[0] > ResolutionX_ - 32)
+	if(trans->pos[0] > ResolutionX_ - 32)
 	{
-		fighter->pos[0] = ResolutionX_ - 32;
-		fighter->vel[0] = 0;
+		trans->pos[0] = ResolutionX_ - 32;
+		trans->vel[0] = 0;
 		fighter->fightState = STAND;
-		if(fighter->pos[1] < ResolutionY_ - 32) fighter->fightState = FALL;
-		else									fighter->fightState = STAND;
+		if(trans->pos[1] < ResolutionY_ - 32) fighter->fightState = FALL;
+		else								  fighter->fightState = STAND;
 	}
 }

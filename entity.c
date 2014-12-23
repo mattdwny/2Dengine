@@ -181,7 +181,7 @@ void PopulateQuadtrees()
 		ent = &__entityList[i];
 		if(!ent->used) continue;
 
-		InsertCollider(ent, &ent->rect);
+		InsertCollider(ent, &ent->data.trans.rect);
 	}
 }
 
@@ -189,23 +189,27 @@ void FetchCollisions(Entity* player)
 {
 	Entity* out[16];
 	int i;
-	float x, y, mag;
-	float x1, y1, r1;
-	float x2, y2, r2;
+	float x, y;
 
-	RetrieveCollisions(&player->rect, (void* (*)[]) &out);
+	Transform* trans = &player->data.trans;
 
-	AABBtoCircle(&player->rect, &x1, &y1, &r1);
+	trans->rect.min[0] -= trans->radius;
+	trans->rect.min[1] -= trans->radius;
+
+	RetrieveCollisions(&trans->rect, (void* (*)[]) &out);
+
+	//AABBtoCircle(&trans->rect, &x1, &y1, &r1);
 
 	for(i = 0; i < 16; i++)
 	{
 		if(!out[i]) continue;
 
-		AABBtoCircle(&out[i]->rect, &x2, &y2, &r2);
+		//AABBtoCircle(&out[i]->rect, &x2, &y2, &r2);
 
-		if(CircleOnCircle(x1,y1,r1,x2,y2,r2,&x,&y))
+		if(out[i]->entType == PROJECTILE && out[i]->data.projectile.owner != player->data.fighter.id &&
+		   CircleOnCircle(trans->pos, out[i]->trans.pos, trans->radius, out[i]->trans.radius, &x, &y)  )
 		{
-			mag = sqrt(x*x + y*y);
+			
 		}
 	}
 }

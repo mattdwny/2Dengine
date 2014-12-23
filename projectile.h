@@ -2,17 +2,18 @@
 #define PROJECTILE_H
 
 #include "graphics.h"
+#include "transform.h"
 #include "vector2.h"
 #include "AABB.h"
 
 typedef struct Projectile_S
 {
+	Transform trans; //MUST be first
+	int owner;
 	Sprite* sprite;
 	int frame;
-	vec2d pos;
-	vec2d vel;
-	AABB BBox;
-	float radius;
+	int frames;
+	int color;
 } Projectile;
 
 void* ProjectileInit(void* data);

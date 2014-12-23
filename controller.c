@@ -107,6 +107,22 @@ void HandleKeysDown0(SDLKey k)
 		case SDLK_LSHIFT:
 			controllers[0].buttons[BUTTON_GUARD] = 1;
 			break;
+
+		case SDLK_u:
+			controllers[1].buttons[BUTTON_LIGHT] = 1;
+			break;
+
+		case SDLK_i:
+			controllers[1].buttons[BUTTON_MED] = 1;
+			break;
+
+		case SDLK_o:
+			controllers[1].buttons[BUTTON_HEAVY] = 1;
+			break;
+
+		case SDLK_p:
+			controllers[1].buttons[BUTTON_SPECIAL] = 1;
+			break;
 	}
 }
 
@@ -135,10 +151,29 @@ void HandleKeysDown1(SDLKey k)
 			ProcessAxis(&controllers[1], AXIS_MOVE_H, HRIGHT, 1);
 			break;
 
-		case SDLK_RSHIFT:
+		/*case SDLK_RSHIFT:
+			controllers[1].buttons[BUTTON_GUARD] = 1;
+			break;*/
+
+		case SDLK_0:
 			controllers[1].buttons[BUTTON_GUARD] = 1;
 			break;
 
+		case SDLK_n:
+			controllers[1].buttons[BUTTON_LIGHT] = 1;
+			break;
+
+		case SDLK_m:
+			controllers[1].buttons[BUTTON_MED] = 1;
+			break;
+
+		case SDLK_COMMA:
+			controllers[1].buttons[BUTTON_HEAVY] = 1;
+			break;
+
+		case SDLK_PERIOD:
+			controllers[1].buttons[BUTTON_SPECIAL] = 1;
+			break;
 	}
 }
 void HandleKeysUp0(SDLKey k)

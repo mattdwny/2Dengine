@@ -2,6 +2,7 @@
 #define FIGHTER_H
 
 #include "graphics.h"
+#include "transform.h"
 #include "vector2.h"
 #include "AABB.h"
 #include "controller.h"
@@ -10,14 +11,13 @@ typedef enum { STAND = 0, CROUCH, MOVE, FALL, FASTFALL, ROLL, SPOT_DODGE, AIR_DO
 
 typedef struct Fighter_S
 {
+	Transform trans; //MUST be first
+	int id;
 	FighterState fightState;
 	Controller* controller;
 	Sprite* sprite;
 	float frame;
-	vec2d pos;
-	vec2d vel;
-	AABB BBox;
-	float radius;
+	vec2d storedKnockback;
 	int maxJumps;
 	int curJumps;
 	float jumpSpeed;
