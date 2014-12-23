@@ -308,7 +308,7 @@ void LevelEditor(char* edit)
 
 		ResetBuffer ();
 		i++;
-		if(SDL_GetMouseState(&mx,&my) && i > 10)
+		if(SDL_GetMouseState(&mx,&my) && i > 20)
 		{
 			i = 0;
 			grid[(my/64)][(mx/64)] = !grid[(my/64)][(mx/64)];
