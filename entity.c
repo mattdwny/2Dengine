@@ -196,18 +196,17 @@ void FetchCollisions(Entity* player)
 	trans->rect.min[0] -= trans->radius;
 	trans->rect.min[1] -= trans->radius;
 
-	RetrieveCollisions(&trans->rect, (void* (*)[]) &out);
+	trans->rect.max[0] += trans->radius;
+	trans->rect.max[1] += trans->radius;
 
-	//AABBtoCircle(&trans->rect, &x1, &y1, &r1);
+	RetrieveCollisions(&trans->rect, (void* (*)[]) &out);
 
 	for(i = 0; i < 16; i++)
 	{
 		if(!out[i]) continue;
 
-		//AABBtoCircle(&out[i]->rect, &x2, &y2, &r2);
-
 		if(out[i]->entType == PROJECTILE && out[i]->data.projectile.owner != player->data.fighter.id &&
-		   CircleOnCircle(trans->pos, out[i]->trans.pos, trans->radius, out[i]->trans.radius, &x, &y)  )
+		   CircleOnCircle(trans->pos, out[i]->trans.pos, trans->radius, out[i]->trans.radius, &x, &y ) )
 		{
 			
 		}

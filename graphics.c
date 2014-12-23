@@ -115,7 +115,7 @@ void ResetBuffer()
  */
 void NextFrame()
 {
-	Uint32 Then;
+	//Uint32 Then;
 	SDL_BlitSurface(screen,NULL,videobuffer,NULL);/*copy everything we did to the video surface*/
 	SDL_Flip(videobuffer);							/*and then update the screen*/
 	
@@ -145,7 +145,7 @@ void InitSpriteList()
 /**
  * LoadSprite default
  */
-Sprite* LoadSprite(char* filename, int sizex, int frames, int sizey)
+Sprite* LoadSprite(char* filename, int sizex, int sizey, int frames)
 {
 	return LoadSprite(filename, sizex, sizey, frames, -1, -1, -1);
 }
@@ -182,9 +182,10 @@ Sprite* LoadSprite(char* filename, int sizex, int sizey, int frames, int c1, int
 
 	temp = IMG_Load(filename);
 
-	if(temp == NULL) CRASH("unable to load a vital sprite: ",SDL_GetError());
+	if(temp == NULL) CRASH("unable to load a vital sprite: ", SDL_GetError());
 
-	__spriteList[i].image = SDL_DisplayFormatAlpha(temp); //FIXME: XXX
+	__spriteList[i].image = SDL_DisplayFormatAlpha(temp);
+
 	SDL_FreeSurface(temp);
 
 	//sets a transparent color for blitting.
@@ -196,7 +197,7 @@ Sprite* LoadSprite(char* filename, int sizex, int sizey, int frames, int c1, int
 	//then copy the given information to the sprite
 	strncpy_s(__spriteList[i].filename,filename,64);
 
-	//now sprites don't have to be 16 frames per line, but most will be.
+	//no sprites don't have to be 16 frames per line, but most will be.
 	__spriteList[i].framesperline = 16;
 	__spriteList[i].w = sizex;
 	__spriteList[i].h = sizey;
@@ -917,4 +918,28 @@ Uint32 colorLerp(Uint32 color1, Uint32 color2, float t) //shouldn't be a bottlen
 	//printf("%x",result32);
 
 	return result32;
+}
+
+/*mouse handling functions*/
+/*this only handles the drawing and animation of.  Assuming you have a 16 by 16  tiled sprite sheet.  This will not handle input*/
+void InitMouse()
+{
+	Msprite = LoadSprite("images/mouse.png",16, 16, 16);
+	if(Msprite == NULL)CRASH("InitMouse: LoadSprite failure\n");
+	Mouse.state = 0;
+	Mouse.shown = 0;
+	Mouse.frame = 0;
+}
+
+    /*draws to the screen immediately before the blit, after all
+     it wouldn't be a very good mouse if it got covered up by the
+     game content*/
+void DrawMouse()
+{
+	int mx,my;
+	SDL_GetMouseState(&mx,&my);
+	if(Msprite != NULL) DrawSprite(Msprite,screen,mx,my,Mouse.frame);
+	Mouse.frame = (Mouse.frame + 1)%16;
+	Mouse.x = mx;
+	Mouse.y = my;
 }

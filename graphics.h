@@ -78,7 +78,7 @@ void DrawPixel(SDL_Surface* screen, Uint8 R, Uint8 G, Uint8 B, int x, int y);
 void BlankScreen(SDL_Surface* buf, Uint32 color);
 void SwapSprite(SDL_Surface* sprite, int color1, int color2, int color3);
 void InitSpriteList();
-void FreeSprite(Sprite* img);
+void FreeSprite(Sprite** img);
 Sprite* LoadSprite(char* filename, int sizex, int sizey, int frames, int c1, int c2, int c3);		//simplest file to load
 Sprite* LoadSprite(char* filename, int sizex, int sizey, int frames);
 
@@ -102,5 +102,8 @@ void NextFrame();
 void draw_circle(SDL_Surface* surface, int n_cx, int n_cy, int radius, Uint32 pixel);
 void mult_circle(SDL_Surface* surface, int n_cx, int n_cy, int radius, Uint32 pixel);
 Uint32 colorLerp(Uint32 color1, Uint32 color2, float t);
+
+void InitMouse();
+void DrawMouse();
 
 #endif

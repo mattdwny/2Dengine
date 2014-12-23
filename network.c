@@ -20,6 +20,8 @@ int port = 7513;
 //Multithreading 2: http://lazyfoo.net/SDL_tutorials/lesson33/
 //Multithreading Documentation: http://www.libsdl.org/release/SDL-1.2.15/docs/html/thread.html
 
+void WaitNetwork();
+
 /**
  *  @param host: if NULL the function will create a server, otherwise attempt to connect to "host" as a client
  */
@@ -39,21 +41,7 @@ void OpenNetwork(const char* host)
 		if(!sockets[i]) CRASH("SDLNet_TCP_Open failure");
 	}
 
-	//Debug code...
-	if(player == 1)
-	{
-		IPaddress* tester = SDLNet_TCP_GetPeerAddress(sockets[0]);
-		printf("\n%i:%i\n", tester->host, tester->port);
-		tester = SDLNet_TCP_GetPeerAddress(sockets[1]);
-		printf("\n%i:%i\n", tester->host, tester->port);
-
-		printf("going to...\n");
-
-		printf("\n%i:%i\n", addresses[0].host, addresses[0].port);
-		printf("\n%i:%i\n", addresses[1].host, addresses[1].port);
-	}
-
-	//TODO: according to this code the client will connect to the server, but the server will never save the client's connection
+	if(host == NULL) WaitNetwork();
 }
 
 void WaitNetwork()
@@ -63,27 +51,15 @@ void WaitNetwork()
 	{
 		while (true)
 		{
-			//printf("Hello");
-
-			SDL_Delay(1); //so I don't kill my CPU
+			SDL_Delay(10); //so I don't kill my CPU
 
 			if ((connection = SDLNet_TCP_Accept(sockets[i])))
 			{
-				//Debug code...
-				IPaddress* tester;// = SDLNet_TCP_GetPeerAddress(sockets[i]);
-				//printf("\n%i:%i\n", tester->host, tester->port);
-				tester = SDLNet_TCP_GetPeerAddress(connection);
-				printf("\n%i:%i\n", tester->host, tester->port);
-				//SDLNet_TCP_Close(sockets[i]);
 				sockets[i] = connection;
 				break;
 			}
 		}
 	}
-
-	printf("going to...\n");
-	printf("\n%i:%i\n", addresses[0].host, addresses[0].port);
-	printf("\n%i:%i\n", addresses[1].host, addresses[1].port);
 }
 
 int Send(void* data) //the data buffer will be used to read from then send
@@ -98,7 +74,7 @@ int Send(void* data) //the data buffer will be used to read from then send
 		*(float*)(buffer[player] + 4) = trans->pos[1];
 		*(float*)(buffer[player] + 8) = trans->vel[0];
 		*(float*)(buffer[player] + 12) = trans->vel[1];
-		*(int*)(&buffer[player] + 16) = (int) fighter->fightState; //only needs a byte but w/e
+		*(int*)(buffer[player] + 16) = (int) fighter->fightState; //only needs a byte but w/e
 
 		knockbackX = fighter->storedKnockback[0]; //I figured this solution would be thread-safer since the entity list is not locked when it is used
 		knockbackY = fighter->storedKnockback[1];
@@ -139,6 +115,7 @@ int Receive(void* data) //the function will receive and write to the data buffer
 		else
 		{
 			printf("(receive-error)");
+			SDL_Delay(10);
 		}
 	}
 
@@ -149,8 +126,6 @@ void CloseNetwork()
 {
 	SDLNet_TCP_Close(sockets[0]); //redundant due to SDLNet_Quit but w/e
 	SDLNet_TCP_Close(sockets[1]);
-
-	//There is no inverse to ResolveHost, which just gets an IP address
 
 	SDLNet_Quit();
 }
