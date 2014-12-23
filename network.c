@@ -10,6 +10,7 @@ TCPsocket sockets[2];
 char buffer[2][256]; //used for SENDER and RECEIVER
 int player = 0;
 int port = 7513;
+int netquit = 0;
 
 //NOTE: I may have to recreate the code so that client and server are not mixed into the same code "network.c" but hopefully I don't to make using the network more abstract.
 //Supplemental resources:
@@ -87,6 +88,11 @@ int Send(void* data) //the data buffer will be used to read from then send
 		if (SDLNet_TCP_Send(sockets[ player], buffer[ player], 32) < 10) //Primary Reference: http://content.gpwiki.org/index.php/SDL:Tutorial:Using_SDL_net
 		{
 			printf("(send-error)");	
+			netquit++;
+		}
+		else
+		{
+			netquit = 0;
 		}
 
 		SDL_Delay(10); //so I don't kill my CPU or bandwidth
@@ -113,10 +119,13 @@ int Receive(void* data) //the function will receive and write to the data buffer
 
 			you->trans.vel[0] += *(float*) (buffer[!player] + 24);
 			you->trans.vel[1] += *(float*) (buffer[!player] + 28);
+
+			netquit = 0;
 		}
 		else
 		{
 			printf("(receive-error)");
+			netquit++;
 			SDL_Delay(10);
 		}
 	}

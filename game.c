@@ -7,6 +7,7 @@
 #include "glib.h"
 #include "vector2.h"
 #include "entity.h"
+#include "fighter.h"
 #include "controller.h"
 #include "font.h"
 #include "audio.h"
@@ -16,8 +17,8 @@
 extern SDL_Surface* screen;
 extern SDL_Surface* buffer; //pointer to the draw buffer
 extern SDL_Rect Camera;
-
-extern Fighter* fighters[2];
+extern Entity* __entityList;
+extern int netquit;
 
 void InitAll();
 void InitControllers(int map);
@@ -46,16 +47,13 @@ int main(int argc, char** argv)
 {
 	SDL_Surface* temp;
 	SDL_Surface* bg;
-	SDL_Surface* tile;
-	int frame = 0;
 	int time = 9999;
 	char timechar[2];
 	char level[128] = "";
 	char edit[128] = "";
 	char host[32] = "";
 	int param = 0;
-	int grid[12][16]; //booleans indicating whether or not a tile is placed in a 64x64 grid layout @ 1024x768 RxC
-
+	
 	FILE* file = NULL;
 
 	while(++param < argc && argv[param][0] == '-' && param + 1 < argc) //ultra meh
@@ -111,9 +109,6 @@ int main(int argc, char** argv)
 		InitNetwork(host);
 	}
 
-	/*CountDown(" ", Red_);
-	CountDown(" ", Red_);
-	CountDown(" ", Red_);
 	PlaySound(THREE_);
 	FrameDelay(200);
 	CountDown("3", Red_);
@@ -121,7 +116,7 @@ int main(int argc, char** argv)
 	CountDown("2", Orange_);
 	PlaySound(ONE_);
 	CountDown("1", Yellow_);
-	PlaySound(GO_);*/
+	PlaySound(GO_);
 
 	PlayMusic(BATTLEFIELD);
 	//PlayMusic(FINALDESTINATION);
@@ -132,7 +127,7 @@ int main(int argc, char** argv)
 		DrawEntityList();
  
 		DrawTextCentered(itoa(time/100,timechar,10),screen, ResolutionX_/2 + 24, ResolutionY_/2 - 300, Green_, 0x1337babe, F_Large);
-		if(frame++ < 500) DrawTextCentered("GO!",screen, ResolutionX_/2 + 60, ResolutionY_/2 - 200, Green_, 0x1337babe, F_Large);
+		if(time > 9500) DrawTextCentered("GO!",screen, ResolutionX_/2 + 60, ResolutionY_/2 - 200, Green_, 0x1337babe, F_Large);
 
 		NextFrame();
 		//END Draw Events
@@ -151,8 +146,9 @@ int main(int argc, char** argv)
 
 		time--;
 		if(time < 0) TimeOut();
-		//else if(abs(fighters[0]->health) >= 100.0f) WinGame(1);
-		//else if(abs(fighters[1]->health) >= 100.0f) WinGame(0);
+		else if(netquit >= 10) CRASH("Opponent Disconnected");
+		else if(abs(__entityList[0].data.fighter.health) >= 100.0f) WinGame(1);
+		else if(abs(__entityList[1].data.fighter.health) >= 100.0f) WinGame(0);
 	}
 
 	exit(0);   //technically this will end the program, but the compiler likes all functions that can return a value TO return a value
@@ -270,6 +266,8 @@ void WinGame(int i)
 		CountDown("Player 2 Wins!", LightOrange_);
 		CountDown("Player 2 Wins!", LightOrange_);
 	}
+
+	exit(0);
 }
 
 void LevelEditor(char* edit)
