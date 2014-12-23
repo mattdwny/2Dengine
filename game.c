@@ -296,7 +296,7 @@ void LevelEditor(char* edit)
 	{
 		static Uint8* keys = NULL;
 		static int mx = 500, my = 500;
-		static int r, c;
+		static int r, c, i = 0;
 		static SDL_Rect rectSrc, rectDst;
 		
 		rectDst.w = rectSrc.w = 64;
@@ -307,7 +307,12 @@ void LevelEditor(char* edit)
 		SDL_PumpEvents();
 
 		ResetBuffer ();
-		if(SDL_GetMouseState(&mx,&my)) grid[(my/64)][(mx/64)] = !grid[(my/64)][(mx/64)];
+		i++;
+		if(SDL_GetMouseState(&mx,&my) && i > 10)
+		{
+			i = 0;
+			grid[(my/64)][(mx/64)] = !grid[(my/64)][(mx/64)];
+		}
 		for(r = -1; ++r < 12; rectDst.y += 64)
 		{
 			rectDst.x = 0;
@@ -323,7 +328,7 @@ void LevelEditor(char* edit)
 		keys = SDL_GetKeyState(NULL);
 		if(keys[SDLK_ESCAPE]) quit = 1;
 
-		SDL_Delay(6);
+		SDL_Delay(5);
 	}
 
 	SDL_FreeSurface(tile);
@@ -350,7 +355,7 @@ void TileLevel(char* level)
 
 	tile = IMG_Load("images/tile.png");
 
-	fopen_s(&file, level, "r");
+	fopen_s(&file, level, "rb");
 
 	if(!file) CRASH("Level does not exist: ", level);
 
